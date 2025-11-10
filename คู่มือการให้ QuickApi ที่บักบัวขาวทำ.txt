@@ -36,7 +36,7 @@ my-project/
 3.สร้าง migration
 3.1 npx sequelize-cli migration:generate --name add-phone-to-users  users คือชื่อที่เราสามารถเเก้ไขได้
 4.up migration 
-4.1 npx sequelize-cli db:migrate:undo  rollback (undo migration ล่าสุด)
+4.1 npx sequelize-cli db:migrate:undo rollback (undo migration ล่าสุด)
 4.2 npx sequelize-cli db:migrate:undo:all rollback ทั้งหมด
 5.down migration
 5.1 npx sequelize-cli db:migrate:undo วิธีลบ table ใน Sequelize CLI

@@ -1,4 +1,5 @@
 const db = require("../models");
+const { sequelize } = db;
 
 exports.form = async (req, res) => {
   try {

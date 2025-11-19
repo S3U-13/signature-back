@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const formController = require("../controllers/formController");
+const choiceController = require("../controllers/choiceController");
 // const apiLogger = require("../middleware/apiLogger");
 // const {
 //   authenticateToken,
@@ -13,5 +14,6 @@ const formController = require("../controllers/formController");
 // router.get("/mapAll", AllChoiceController.mapAll);
 
 router.get("/form", formController.form);
+router.get("/choice", choiceController.choice);
 
 module.exports = router;

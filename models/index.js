@@ -10,6 +10,7 @@ db.sequelize = sequelize;
 // db.Role = require("./role");
 // db.Position = require("./position");
 // db.UserLog = require("./user_logs");
+db.FormType = require("./form_type");
 
 //associations
 // db.User.belongsTo(db.Role, { foreignKey: "role_id", as: "Role" });

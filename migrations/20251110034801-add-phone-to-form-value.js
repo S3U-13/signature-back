@@ -44,7 +44,7 @@ module.exports = {
       },
       consent: {
         allowNull: true,
-        type: Sequelize.STRING(1),
+        type: Sequelize.INTEGER,
       },
       flag_status: {
         allowNull: true,
@@ -170,33 +170,39 @@ module.exports = {
     });
 
     await queryInterface.createTable("allergies", {
+      id: {
+        allowNull: true,
+        type: Sequelize.INTEGER,
+        primaryKey: true,
+        autoIncrement: true,
+      },
       allergy: {
         allowNull: true,
-        type: Sequelize.STRING(1),
+        type: Sequelize.INTEGER,
       },
       asthma: {
         allowNull: true,
-        type: Sequelize.STRING(1),
+        type: Sequelize.INTEGER,
       },
       kidney_disease: {
         allowNull: true,
-        type: Sequelize.STRING(1),
+        type: Sequelize.INTEGER,
       },
       diabetes: {
         allowNull: true,
-        type: Sequelize.STRING(1),
+        type: Sequelize.INTEGER,
       },
       heart_disease: {
         allowNull: true,
-        type: Sequelize.STRING(1),
+        type: Sequelize.INTEGER,
       },
       contrast_before: {
         allowNull: true,
-        type: Sequelize.STRING(1),
+        type: Sequelize.INTEGER,
       },
       contrast_allergy: {
         allowNull: true,
-        type: Sequelize.STRING(1),
+        type: Sequelize.INTEGER,
       },
       contrast_allergy_detail: {
         allowNull: true,
@@ -204,7 +210,7 @@ module.exports = {
       },
       seafood_allergy: {
         allowNull: true,
-        type: Sequelize.STRING(1),
+        type: Sequelize.INTEGER,
       },
       seafood_allergy_detail: {
         allowNull: true,
@@ -212,7 +218,7 @@ module.exports = {
       },
       drug_allergy: {
         allowNull: true,
-        type: Sequelize.STRING(1),
+        type: Sequelize.INTEGER,
       },
       drug_allergy_detail: {
         allowNull: true,

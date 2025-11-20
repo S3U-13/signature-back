@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const formController = require("../controllers/formController");
 const choiceController = require("../controllers/choiceController");
+const patController = require("../controllers/patController");
 // const apiLogger = require("../middleware/apiLogger");
 // const {
 //   authenticateToken,
@@ -15,5 +16,6 @@ const choiceController = require("../controllers/choiceController");
 
 router.get("/form", formController.form);
 router.get("/choice", choiceController.choice);
+router.get("/pat/:value", patController.pat);
 
 module.exports = router;

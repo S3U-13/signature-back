@@ -13,6 +13,7 @@ db.sequelize = sequelize;
 db.FormType = require("./form_type");
 db.ChoiceType = require("./choice_type");
 db.Choice = require("./choice");
+db.Pat = require("./pat");
 
 //associations
 // db.User.belongsTo(db.Role, { foreignKey: "role_id", as: "Role" });

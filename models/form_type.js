@@ -4,14 +4,13 @@ const sequelize = require("../config/db");
 const FormType = sequelize.define(
   "form_type",
   {
-    form_name: {
-      allowNull: false,
-      type: DataTypes.STRING,
+    id: {
+      type: DataTypes.INTEGER,
+      primaryKey: true,
+      autoIncrement: true,
     },
-    flag_status: {
-      allowNull: true,
-      type: DataTypes.STRING(1),
-    },
+    form_name: DataTypes.STRING,
+    flag_status: DataTypes.STRING,
   },
   {
     modelName: "FormType",

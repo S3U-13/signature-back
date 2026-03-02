@@ -3,13 +3,13 @@ const { sequelize } = db;
 
 exports.choice = async (req, res) => {
   try {
-    const choice = await db.Choice.findAll({
-      attributes: ["id", "choice_type_id", "choice_name", "flag_active"],
+    const options = await db.Option.findAll({
+      attributes: ["id", "option_group_id", "name", "flag_status"],
       include: [
-        { model: db.ChoiceType, as: "choice_type", attributes: ["type_name"] },
+        { model: db.OptionGroup, as: "OptionGroupName", attributes: ["name"] },
       ],
     });
-    res.json(choice);
+    res.json(options);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

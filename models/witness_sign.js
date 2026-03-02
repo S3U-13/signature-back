@@ -4,8 +4,9 @@ const sequelize = require("../config/db");
 const WitnessSign = sequelize.define(
   "WitnessSign",
   {
-    witness_id: {
-      type: DataTypes.INTEGER,
+    form_id: DataTypes.INTEGER,
+    witness_name: {
+      type: DataTypes.STRING,
       allowNull: true,
     },
     witness_sign: {
@@ -24,7 +25,7 @@ const WitnessSign = sequelize.define(
   {
     modelName: "WitnessSign",
     tableName: "witness_sign",
-  }
+  },
 );
 
 module.exports = WitnessSign;

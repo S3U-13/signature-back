@@ -1,8 +1,8 @@
 const { DataTypes } = require("sequelize");
 const sequelize = require("../config/db");
 
-const ChoiceType = sequelize.define(
-  "ChoiceType",
+const OptionGroup = sequelize.define(
+  "OptionGroup",
   {
     id: {
       allowNull: true,
@@ -10,7 +10,7 @@ const ChoiceType = sequelize.define(
       autoIncrement: true,
       type: DataTypes.INTEGER,
     },
-    type_name: {
+    name: {
       allowNull: true,
       type: DataTypes.STRING,
     },
@@ -20,8 +20,8 @@ const ChoiceType = sequelize.define(
     },
   },
   {
-    modelName: "ChoiceType",
-    tableName: "choice_type",
-  }
+    modelName: "OptionGroup",
+    tableName: "option_groups",
+  },
 );
-module.exports = ChoiceType;
+module.exports = OptionGroup;

@@ -2,14 +2,14 @@ const { DataTypes } = require("sequelize");
 
 const sequelize = require("../config/db");
 
-const Choice = sequelize.define(
-  "choice",
+const Option = sequelize.define(
+  "Option",
   {
-    choice_type_id: {
+    option_group_id: {
       type: DataTypes.INTEGER,
       allowNull: true,
     },
-    choice_name: {
+    name: {
       type: DataTypes.STRING,
       allowNull: true,
     },
@@ -19,8 +19,8 @@ const Choice = sequelize.define(
     },
   },
   {
-    modelName: "Choice",
-    tableName: "choice",
-  }
+    modelName: "Option",
+    tableName: "option",
+  },
 );
-module.exports = Choice;
+module.exports = Option;

@@ -4,6 +4,7 @@ const sequelize = require("../config/db");
 const StaffSign = sequelize.define(
   "StaffSign",
   {
+    form_id: DataTypes.INTEGER,
     staff_id: {
       type: DataTypes.INTEGER,
       allowNull: true,
@@ -24,7 +25,7 @@ const StaffSign = sequelize.define(
   {
     modelName: "StaffSign",
     tableName: "staff_sign",
-  }
+  },
 );
 
 module.exports = StaffSign;

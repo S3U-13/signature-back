@@ -4,6 +4,10 @@ const sequelize = require("../config/db");
 const DoctorSign = sequelize.define(
   "DoctorSign",
   {
+    form_id: {
+      allowNull: true,
+      type: DataTypes.INTEGER,
+    },
     doctor_id: {
       type: DataTypes.INTEGER,
       allowNull: true,
@@ -24,7 +28,7 @@ const DoctorSign = sequelize.define(
   {
     modelName: "DoctorSign",
     tableName: "doctor_sign",
-  }
+  },
 );
 
 module.exports = DoctorSign;

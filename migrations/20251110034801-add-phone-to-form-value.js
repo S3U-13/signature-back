@@ -3,48 +3,66 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.createTable("form_value", {
+    await queryInterface.createTable("form", {
       id: {
         allowNull: false,
         primaryKey: true,
         autoIncrement: true,
         type: Sequelize.INTEGER,
       },
-      form_type_code: {
+      form_type_id: {
         allowNull: true,
-        type: Sequelize.STRING(5),
+        type: Sequelize.INTEGER,
       },
       hn: {
         allowNull: true,
         type: Sequelize.INTEGER,
       },
-      pat_sign_id: {
-        allowNull: true,
-        type: Sequelize.INTEGER,
-      },
-      witness_sign_id: {
-        allowNull: true,
-        type: Sequelize.INTEGER,
-      },
-      staff_sign_id: {
-        allowNull: true,
-        type: Sequelize.INTEGER,
-      },
-      doctor_sign_id: {
-        allowNull: true,
-        type: Sequelize.INTEGER,
-      },
-      relation: {
-        allowNull: true,
-        type: Sequelize.STRING(100),
-      },
-      diseuse: {
+      disease: {
         allowNull: true,
         type: Sequelize.STRING,
+      },
+      lmp: {
+        allowNull: true,
+        type: Sequelize.DATE,
       },
       consent: {
         allowNull: true,
         type: Sequelize.INTEGER,
+      },
+      flag_status: {
+        allowNull: true,
+        defaultValue: "a",
+        type: Sequelize.STRING(1),
+      },
+      createdAt: {
+        allowNull: true,
+        type: Sequelize.DATE,
+      },
+      updatedAt: {
+        allowNull: true,
+        type: Sequelize.DATE,
+      },
+    });
+
+    await queryInterface.createTable("patient_contacts", {
+      id: {
+        allowNull: false,
+        primaryKey: true,
+        autoIncrement: true,
+        type: Sequelize.INTEGER,
+      },
+      form_id: {
+        allowNull: true,
+        type: Sequelize.INTEGER,
+      },
+      name: {
+        allowNull: true,
+        type: Sequelize.STRING,
+      },
+      relation: {
+        allowNull: true,
+        type: Sequelize.STRING,
       },
       flag_status: {
         allowNull: true,
@@ -68,6 +86,10 @@ module.exports = {
         primaryKey: true,
         type: Sequelize.INTEGER,
       },
+      form_id: {
+        allowNull: true,
+        type: Sequelize.INTEGER,
+      },
       hn: {
         allowNull: true,
         type: Sequelize.INTEGER,
@@ -85,6 +107,14 @@ module.exports = {
         defaultValue: "a",
         type: Sequelize.STRING(1),
       },
+      createdAt: {
+        allowNull: true,
+        type: Sequelize.DATE,
+      },
+      updatedAt: {
+        allowNull: true,
+        type: Sequelize.DATE,
+      },
     });
 
     await queryInterface.createTable("witness_sign", {
@@ -92,6 +122,10 @@ module.exports = {
         allowNull: false,
         autoIncrement: true,
         primaryKey: true,
+        type: Sequelize.INTEGER,
+      },
+      form_id: {
+        allowNull: true,
         type: Sequelize.INTEGER,
       },
       witness_name: {
@@ -111,6 +145,14 @@ module.exports = {
         defaultValue: "a",
         type: Sequelize.STRING(1),
       },
+      createdAt: {
+        allowNull: true,
+        type: Sequelize.DATE,
+      },
+      updatedAt: {
+        allowNull: true,
+        type: Sequelize.DATE,
+      },
     });
 
     await queryInterface.createTable("staff_sign", {
@@ -118,6 +160,10 @@ module.exports = {
         allowNull: false,
         autoIncrement: true,
         primaryKey: true,
+        type: Sequelize.INTEGER,
+      },
+      form_id: {
+        allowNull: true,
         type: Sequelize.INTEGER,
       },
       staff_id: {
@@ -141,6 +187,14 @@ module.exports = {
         defaultValue: "a",
         type: Sequelize.STRING(1),
       },
+      createdAt: {
+        allowNull: true,
+        type: Sequelize.DATE,
+      },
+      updatedAt: {
+        allowNull: true,
+        type: Sequelize.DATE,
+      },
     });
 
     await queryInterface.createTable("doctor_sign", {
@@ -148,6 +202,10 @@ module.exports = {
         allowNull: false,
         autoIncrement: true,
         primaryKey: true,
+        type: Sequelize.INTEGER,
+      },
+      form_id: {
+        allowNull: true,
         type: Sequelize.INTEGER,
       },
       doctor_id: {
@@ -167,66 +225,193 @@ module.exports = {
         defaultValue: "a",
         type: Sequelize.STRING(1),
       },
+      createdAt: {
+        allowNull: true,
+        type: Sequelize.DATE,
+      },
+      updatedAt: {
+        allowNull: true,
+        type: Sequelize.DATE,
+      },
     });
 
-    await queryInterface.createTable("allergies", {
+    await queryInterface.createTable("congenital_disease", {
       id: {
         allowNull: true,
         type: Sequelize.INTEGER,
         primaryKey: true,
         autoIncrement: true,
       },
-      allergy: {
+      form_id: {
         allowNull: true,
         type: Sequelize.INTEGER,
       },
-      asthma: {
+      condition_id: {
         allowNull: true,
         type: Sequelize.INTEGER,
       },
-      kidney_disease: {
+      flag_status: {
         allowNull: true,
-        type: Sequelize.INTEGER,
+        defaultValue: "a",
+        type: Sequelize.STRING(1),
       },
-      diabetes: {
-        allowNull: true,
-        type: Sequelize.INTEGER,
-      },
-      heart_disease: {
-        allowNull: true,
-        type: Sequelize.INTEGER,
-      },
-      contrast_before: {
-        allowNull: true,
-        type: Sequelize.INTEGER,
-      },
-      contrast_allergy: {
-        allowNull: true,
-        type: Sequelize.INTEGER,
-      },
-      contrast_allergy_detail: {
-        allowNull: true,
-        type: Sequelize.STRING,
-      },
-      seafood_allergy: {
-        allowNull: true,
-        type: Sequelize.INTEGER,
-      },
-      seafood_allergy_detail: {
-        allowNull: true,
-        type: Sequelize.STRING,
-      },
-      drug_allergy: {
-        allowNull: true,
-        type: Sequelize.INTEGER,
-      },
-      drug_allergy_detail: {
-        allowNull: true,
-        type: Sequelize.STRING,
-      },
-      lmp: {
+      createdAt: {
         allowNull: true,
         type: Sequelize.DATE,
+      },
+      updatedAt: {
+        allowNull: true,
+        type: Sequelize.DATE,
+      },
+    });
+
+    await queryInterface.createTable("contrast_history_status", {
+      id: {
+        allowNull: false,
+        primaryKey: true,
+        autoIncrement: true,
+        type: Sequelize.INTEGER,
+      },
+      form_id: {
+        allowNull: true,
+        type: Sequelize.INTEGER,
+      },
+      contrast_history_id: {
+        allowNull: false,
+        type: Sequelize.INTEGER,
+      },
+      flag_status: {
+        allowNull: true,
+        defaultValue: "a",
+        type: Sequelize.STRING(1),
+      },
+      createdAt: {
+        allowNull: true,
+        type: Sequelize.DATE,
+      },
+      updatedAt: {
+        allowNull: true,
+        type: Sequelize.DATE,
+      },
+    });
+    await queryInterface.createTable("contrast_allergy_status", {
+      id: {
+        allowNull: false,
+        primaryKey: true,
+        autoIncrement: true,
+        type: Sequelize.INTEGER,
+      },
+      form_id: {
+        allowNull: true,
+        type: Sequelize.INTEGER,
+      },
+      contrast_allergy_id: {
+        allowNull: false,
+        type: Sequelize.INTEGER,
+      },
+      contrast_allergy_symptom: {
+        allowNull: true,
+        type: Sequelize.STRING,
+      },
+      flag_status: {
+        allowNull: true,
+        defaultValue: "a",
+        type: Sequelize.STRING(1),
+      },
+      createdAt: {
+        allowNull: true,
+        type: Sequelize.DATE,
+      },
+      updatedAt: {
+        allowNull: true,
+        type: Sequelize.DATE,
+      },
+    });
+    await queryInterface.createTable("seafood_allergy_status", {
+      id: {
+        allowNull: false,
+        primaryKey: true,
+        autoIncrement: true,
+        type: Sequelize.INTEGER,
+      },
+      form_id: {
+        allowNull: true,
+        type: Sequelize.INTEGER,
+      },
+      seafood_allergy_id: {
+        allowNull: false,
+        type: Sequelize.INTEGER,
+      },
+      seafood_allergy_symptom: {
+        allowNull: true,
+        type: Sequelize.STRING,
+      },
+      flag_status: {
+        allowNull: true,
+        defaultValue: "a",
+        type: Sequelize.STRING(1),
+      },
+      createdAt: {
+        allowNull: true,
+        type: Sequelize.DATE,
+      },
+      updatedAt: {
+        allowNull: true,
+        type: Sequelize.DATE,
+      },
+    });
+
+    await queryInterface.createTable("drug_allergy_status", {
+      id: {
+        allowNull: false,
+        primaryKey: true,
+        autoIncrement: true,
+        type: Sequelize.INTEGER,
+      },
+      form_id: {
+        allowNull: true,
+        type: Sequelize.INTEGER,
+      },
+      drug_allergy_id: {
+        allowNull: false,
+        type: Sequelize.INTEGER,
+      },
+      drug: {
+        allowNull: true,
+        type: Sequelize.STRING,
+      },
+      flag_status: {
+        allowNull: true,
+        defaultValue: "a",
+        type: Sequelize.STRING(1),
+      },
+      createdAt: {
+        allowNull: true,
+        type: Sequelize.DATE,
+      },
+      updatedAt: {
+        allowNull: true,
+        type: Sequelize.DATE,
+      },
+    });
+    await queryInterface.createTable("drug_allergy_status", {
+      id: {
+        allowNull: false,
+        primaryKey: true,
+        autoIncrement: true,
+        type: Sequelize.INTEGER,
+      },
+      form_id: {
+        allowNull: true,
+        type: Sequelize.INTEGER,
+      },
+      drug_allergy_id: {
+        allowNull: false,
+        type: Sequelize.INTEGER,
+      },
+      drug: {
+        allowNull: true,
+        type: Sequelize.STRING,
       },
       flag_status: {
         allowNull: true,
@@ -245,11 +430,16 @@ module.exports = {
   },
 
   async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable("form_value");
+    await queryInterface.dropTable("form");
+    await queryInterface.dropTable("patient_contacts");
+    await queryInterface.dropTable("congenital_disease");
+    await queryInterface.dropTable("contrast_history_status");
+    await queryInterface.dropTable("contrast_allergy_status");
+    await queryInterface.dropTable("seafood_allergy_status");
+    await queryInterface.dropTable("drug_allergy_status");
     await queryInterface.dropTable("pat_sign");
     await queryInterface.dropTable("witness_sign");
     await queryInterface.dropTable("staff_sign");
     await queryInterface.dropTable("doctor_sign");
-    await queryInterface.dropTable("allergies");
   },
 };

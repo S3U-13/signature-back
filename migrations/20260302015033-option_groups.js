@@ -3,24 +3,14 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
-    /**
-     * Add altering commands here.
-     *
-     * Example:
-     * await queryInterface.createTable('users', { id: Sequelize.INTEGER });
-     */
-    await queryInterface.createTable("head_menu", {
+    await queryInterface.createTable("option_groups", {
       id: {
-        primaryKey: true,
         allowNull: false,
+        primaryKey: true,
         autoIncrement: true,
         type: Sequelize.INTEGER,
       },
-      head_menu_name: {
-        allowNull: true,
-        type: Sequelize.STRING,
-      },
-      head_menu_group: {
+      name: {
         allowNull: true,
         type: Sequelize.STRING,
       },
@@ -39,32 +29,20 @@ module.exports = {
       },
     });
 
-    await queryInterface.createTable("menu", {
+    await queryInterface.createTable("option", {
       id: {
-        primaryKey: true,
         allowNull: false,
+        primaryKey: true,
         autoIncrement: true,
         type: Sequelize.INTEGER,
       },
-      head_menu_id: {
-        allowNull: false,
+      option_group_id: {
+        allowNull: true,
         type: Sequelize.INTEGER,
       },
-      menu_name: {
+      name: {
         allowNull: true,
         type: Sequelize.STRING,
-      },
-      menu_path: {
-        allowNull: true,
-        type: Sequelize.STRING,
-      },
-      menu_path: {
-        allowNull: true,
-        type: Sequelize.STRING,
-      },
-      menu_role: {
-        allowNull: true,
-        type: Sequelize.STRING(30),
       },
       flag_status: {
         allowNull: true,
@@ -83,13 +61,7 @@ module.exports = {
   },
 
   async down(queryInterface, Sequelize) {
-    /**
-     * Add reverting commands here.
-     *
-     * Example:
-     * await queryInterface.dropTable('users');
-     */
-    await queryInterface.dropTable("head_menu");
-    await queryInterface.dropTable("menu");
+    await queryInterface.dropTable("option_groups");
+    await queryInterface.dropTable("option");
   },
 };

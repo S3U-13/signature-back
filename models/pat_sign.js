@@ -4,7 +4,8 @@ const sequelize = require("../config/db");
 const PatSign = sequelize.define(
   "PatSign",
   {
-    pat_id: {
+    form_id: DataTypes.INTEGER,
+    hn: {
       type: DataTypes.INTEGER,
       allowNull: true,
     },
@@ -17,14 +18,14 @@ const PatSign = sequelize.define(
       allowNull: true,
     },
     flag_status: {
-      type: DataTypes.STRING(1),
+      type: DataTypes.STRING,
       allowNull: true,
     },
   },
   {
     modelName: "PatSign",
     tableName: "pat_sign",
-  }
+  },
 );
 
 module.exports = PatSign;

@@ -30,6 +30,18 @@ module.exports = {
         allowNull: true,
         type: Sequelize.INTEGER,
       },
+      staff_id: {
+        allowNull: true,
+        type: Sequelize.INTEGER,
+      },
+      nurse_id: {
+        allowNull: true,
+        type: Sequelize.INTEGER,
+      },
+      doctor_id: {
+        allowNull: true,
+        type: Sequelize.INTEGER,
+      },
       flag_status: {
         allowNull: true,
         defaultValue: "a",

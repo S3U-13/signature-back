@@ -8,6 +8,9 @@ const Form = sequelize.define(
     disease: DataTypes.STRING,
     lmp: DataTypes.DATE,
     consent: DataTypes.INTEGER,
+    staff_id: DataTypes.INTEGER,
+    nurse_id: DataTypes.INTEGER,
+    doctor_id: DataTypes.INTEGER,
     createByUserId: DataTypes.INTEGER,
   },
   {

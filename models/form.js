@@ -11,7 +11,8 @@ const Form = sequelize.define(
     staff_id: DataTypes.INTEGER,
     nurse_id: DataTypes.INTEGER,
     doctor_id: DataTypes.INTEGER,
-    createByUserId: DataTypes.INTEGER,
+    form_status: DataTypes.STRING,
+    flag_status: DataTypes.STRING,
   },
   {
     modelName: "Form",

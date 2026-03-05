@@ -6,10 +6,71 @@ const { emptyToNull } = require("../services/empty-to-null");
 exports.form_list = async (req, res) => {
   try {
     // form_list เพื่อ ค้นหา ข้อมูลทั้ง หมดใน table นั้นมาเเสดง
-    const form_list = await db.Form.findAll();
+    const form_list = await db.Form.findAll({
+      // attributes: ["id", "form_type_id", "hn", "createdAt",],
+      include: [
+        { model: db.FormType, as: "FormTypeName", attributes: ["form_name"] }
+      ]
+    });
 
-    // ส่งข้อมูลออกเป็น json
-    res.json(form_list);
+    const data_form_list = []
+    for (const item of form_list) {
+      const pat = await db.Pat.findByPk(item.hn)
+
+      data_form_list.push({
+        id: item.id,
+        hn: item.hn,
+        name: pat
+          ? `${pat.prename}${pat.firstname} ${pat.lastname}`
+          : null,
+        form_type: item.FormTypeName
+          ? item.FormTypeName.form_name
+          : null,
+        status: item.form_status,
+        form_type_id: item.form_type_id
+      });
+    }
+
+    res.json(data_form_list);
+  } catch (error) {
+    // message error
+    res.status(500).json({ error: "Something went wrong!" });
+  }
+};
+
+exports.search_hn_form_list = async (req, res) => {
+  const { hn } = req.params;
+  try {
+    // form_list เพื่อ ค้นหา ข้อมูลทั้ง หมดใน table นั้นมาเเสดง
+    const form_list = await db.Form.findAll({
+      // attributes: ["id", "form_type_id", "hn", "createdAt",],
+      where: {
+        hn: hn
+      },
+      include: [
+        { model: db.FormType, as: "FormTypeName", attributes: ["form_name"] }
+      ]
+    });
+
+    const data_form_list = []
+    for (const item of form_list) {
+      const pat = await db.Pat.findByPk(item.hn)
+
+      data_form_list.push({
+        id: item.id,
+        hn: item.hn,
+        name: pat
+          ? `${pat.prename}${pat.firstname} ${pat.lastname}`
+          : null,
+        form_type: item.FormTypeName
+          ? item.FormTypeName.form_name
+          : null,
+        status: item.form_status,
+        form_type_id: item.form_type_id
+      });
+    }
+
+    res.json(data_form_list);
   } catch (error) {
     // message error
     res.status(500).json({ error: "Something went wrong!" });

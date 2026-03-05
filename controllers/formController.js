@@ -7,7 +7,6 @@ exports.form = async (req, res) => {
       attributes: ["id", "form_name", "flag_status"],
     });
     res.json(form);
-    console.log(form);
   } catch (error) {
     res.status(500).json({ error: "Something went wrong!" });
   }

@@ -42,6 +42,11 @@ module.exports = {
         allowNull: true,
         type: Sequelize.INTEGER,
       },
+      form_status: {
+        allowNull: true,
+        defaultValue: "Pending",
+        type: Sequelize.STRING(15),
+      },
       flag_status: {
         allowNull: true,
         defaultValue: "a",

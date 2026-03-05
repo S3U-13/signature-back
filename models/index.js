@@ -17,16 +17,17 @@ db.Option = require("./option");
 
 //form
 db.FormType = require("./form_type");
-db.Form = require("./form_type");
-db.PatientContacts = require("./form_type");
-db.CongenitalDisease = require("./form_type");
-db.ContrastAllergyStatus = require("./form_type");
-db.ContrastHistoryStatus = require("./form_type");
-db.DrugAllergyStatus = require("./form_type");
-db.PatSign = require("./form_type");
-db.WitnessSign = require("./form_type");
-db.StaffSign = require("./form_type");
-db.DoctorSign = require("./form_type");
+db.Form = require("./form");
+db.PatientContacts = require("./patient_contacts");
+db.CongenitalDisease = require("./congenital_disease");
+db.ContrastAllergyStatus = require("./contrast_allergy_status");
+db.ContrastHistoryStatus = require("./contrast_history_status");
+db.DrugAllergyStatus = require("./drug_allergy_status");
+db.SeafoodAllergyStatus = require("./seafood_allergy_status");
+db.PatSign = require("./pat_sign");
+db.WitnessSign = require("./witness_sign");
+db.StaffSign = require("./staff_sign");
+db.DoctorSign = require("./doctor_sign");
 
 db.Pat = require("./pat");
 
@@ -72,6 +73,10 @@ db.Form.hasOne(db.DrugAllergyStatus, {
   foreignKey: "form_id",
   as: "DrugAllergy",
 });
+db.Form.hasOne(db.SeafoodAllergyStatus, {
+  foreignKey: "form_id",
+  as: "SeafoodAllergy",
+});
 db.Form.hasOne(db.PatSign, {
   foreignKey: "form_id",
   as: "PatSigns",
@@ -92,39 +97,42 @@ db.Form.hasOne(db.DoctorSign, {
 // belongsTo
 db.PatientContacts.belongsTo(db.Form, {
   foreignKey: "form_id",
-  as: "FormService",
 });
+
 db.CongenitalDisease.belongsTo(db.Form, {
   foreignKey: "form_id",
-  as: "FormService",
 });
+
 db.ContrastAllergyStatus.belongsTo(db.Form, {
   foreignKey: "form_id",
-  as: "FormService",
 });
+
 db.ContrastHistoryStatus.belongsTo(db.Form, {
   foreignKey: "form_id",
-  as: "FormService",
 });
+
 db.DrugAllergyStatus.belongsTo(db.Form, {
   foreignKey: "form_id",
-  as: "FormService",
 });
+
+db.SeafoodAllergyStatus.belongsTo(db.Form, {
+  foreignKey: "form_id",
+});
+
 db.PatSign.belongsTo(db.Form, {
   foreignKey: "form_id",
-  as: "FormService",
 });
+
 db.WitnessSign.belongsTo(db.Form, {
   foreignKey: "form_id",
-  as: "FormService",
 });
+
 db.StaffSign.belongsTo(db.Form, {
   foreignKey: "form_id",
-  as: "FormService",
 });
+
 db.DoctorSign.belongsTo(db.Form, {
   foreignKey: "form_id",
-  as: "FormService",
 });
 
 module.exports = db;

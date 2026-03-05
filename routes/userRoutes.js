@@ -20,6 +20,8 @@ router.get("/form", formController.form);
 router.get("/choice", choiceController.choice);
 router.get("/pat/:value", patController.pat);
 router.get("/form-radio-therapy-list", formRadioTherapyController.form_list);
+router.get("/form-radio-therapy-list/:hn", formRadioTherapyController.search_hn_form_list);
+
 router.post(
   "/doc-create-form-radio-therapy",
   formRadioTherapyController.crate_form_by_doc,

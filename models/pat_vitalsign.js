@@ -4,7 +4,11 @@ const sequelize = require("../config/connect_db_ppk");
 const PatVitalSign = sequelize.define(
   "PatVitalSign",
   {
-    id: DataTypes.INTEGER,
+    id: {
+      type: DataTypes.INTEGER,
+      primaryKey: true,
+      autoIncrement: true,
+    },
     patregid: DataTypes.INTEGER,
     patvisitid: DataTypes.INTEGER,
     hn: DataTypes.INTEGER,
@@ -14,8 +18,8 @@ const PatVitalSign = sequelize.define(
   },
   {
     modelName: "PatVitalSign",
-    tableName: "patvitalsign",
+    tableName: "pat_vitalsign",
     timestamps: false,
-  }
+  },
 );
 module.exports = PatVitalSign;

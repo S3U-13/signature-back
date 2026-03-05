@@ -17,10 +17,22 @@ const formRadioTherapyController = require("../controllers/formRadioTherapyContr
 // router.get("/mapAll", AllChoiceController.mapAll);
 
 router.get("/form", formController.form);
+
 router.get("/choice", choiceController.choice);
+
 router.get("/pat/:value", patController.pat);
+
 router.get("/form-radio-therapy-list", formRadioTherapyController.form_list);
-router.get("/form-radio-therapy-list/:hn", formRadioTherapyController.search_hn_form_list);
+
+router.get(
+  "/form-radio-therapy-list/:hn",
+  formRadioTherapyController.search_hn_form_list,
+);
+
+router.get(
+  "/form-by-id/:id",
+  formRadioTherapyController.show_pat_form_by_form_id,
+);
 
 router.post(
   "/doc-create-form-radio-therapy",

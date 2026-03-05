@@ -30,6 +30,9 @@ db.StaffSign = require("./staff_sign");
 db.DoctorSign = require("./doctor_sign");
 
 db.Pat = require("./pat");
+db.PatVisit = require("./pat_visit");
+db.Lookup = require("./lookup");
+db.PatVitalSign = require("./pat_vitalsign");
 
 //associations
 // db.User.belongsTo(db.Role, { foreignKey: "role_id", as: "Role" });
@@ -134,5 +137,38 @@ db.StaffSign.belongsTo(db.Form, {
 db.DoctorSign.belongsTo(db.Form, {
   foreignKey: "form_id",
 });
+
+// pat
+
+db.Pat.belongsTo(db.Lookup, {
+  foreignKey: "occupation",
+  targetKey: "lookupid",
+  as: "occupation_detail",
+});
+
+db.Pat.belongsTo(db.Lookup, {
+  foreignKey: "sex",
+  targetKey: "lookupid",
+  as: "sex_name",
+});
+
+db.Pat.belongsTo(db.Lookup, {
+  foreignKey: "race",
+  targetKey: "lookupid",
+  as: "race_text",
+});
+
+db.Pat.belongsTo(db.Lookup, {
+  foreignKey: "citizenship",
+  targetKey: "lookupid",
+  as: "citizenship_text",
+});
+
+// pat_visit -> pat
+db.Pat.hasMany(db.PatVisit, { foreignKey: "hn", as: "pat_visit" });
+
+// 📌 Pat ↔ PatVitalSign (1:N)
+db.Pat.hasMany(db.PatVitalSign, { foreignKey: "hn", as: "pat_vitalsign" });
+db.PatVitalSign.belongsTo(db.Pat, { foreignKey: "hn", as: "pat_vitalsign" });
 
 module.exports = db;

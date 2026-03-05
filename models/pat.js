@@ -22,7 +22,7 @@ const Pat = sequelize.define(
     modelName: "Pat",
     tableName: "pat",
     timestamps: false,
-  }
+  },
 );
 
 module.exports = Pat;

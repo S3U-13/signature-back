@@ -9,11 +9,11 @@ const PatSign = sequelize.define(
       type: DataTypes.INTEGER,
       allowNull: true,
     },
-    pat_sign: {
+    patient_sign: {
       type: DataTypes.BLOB,
       allowNull: true,
     },
-    pat_sign_date: {
+    patient_sign_date: {
       type: DataTypes.DATE,
       allowNull: true,
     },

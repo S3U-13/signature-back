@@ -1,5 +1,6 @@
 const db = require("../models");
 const { sequelize } = db;
+const { Op, Model } = require("sequelize");
 const { emptyToNull } = require("../services/empty-to-null");
 
 // create function form_list
@@ -104,21 +105,52 @@ exports.crate_form_by_doc = async (req, res) => {
 
 exports.show_pat_form_by_form_id = async (req, res) => {
   const { id } = req.params;
-
   try {
-    const form = await db.Form.findOne({
-      where: { id: id },
-      include: [
-        { model: db.FormType, as: "FormTypeName", attributes: ["form_name"] },
-      ],
-    });
+    const [
+      form,
+      patient_contacts,
+      congenital_disease,
+      contrast_history_status,
+      contrast_allergy_status,
+      seafood_allergy_status,
+      drug_allergy_status,
+      pat_sign,
+      witness_sign,
+      staff_sign,
+      doctor_sign
+    ] = await Promise.all([
+      db.Form.findOne({
+        where: { id: id },
+        include: [
+          { model: db.FormType, as: "FormTypeName", attributes: ["form_name"] },
+        ],
+      }),
+      db.PatientContacts.findOne({ where: { form_id: id } }),
+      db.CongenitalDisease.findOne({ where: { form_id: id } }),
+      db.ContrastHistoryStatus.findOne({ where: { form_id: id } }),
+      db.ContrastAllergyStatus.findOne({ where: { form_id: id } }),
+      db.SeafoodAllergyStatus.findOne({ where: { form_id: id } }),
+      db.DrugAllergyStatus.findOne({ where: { form_id: id } }),
+      db.PatSign.findOne({ where: { form_id: id } }),
+      db.WitnessSign.findOne({ where: { form_id: id } }),
+      db.StaffSign.findOne({ where: { form_id: id } }),
+      db.DoctorSign.findOne({ where: { form_id: id } }),
+    ]);
 
     if (!form) {
       return res.status(404).json({ message: "Form not found" });
     }
 
+    const now = new Date();
+    // const oneYearAgo = new Date();
+    // oneYearAgo.setFullYear(now.getFullYear() - 1);
+    const elevenMonthAgo = new Date();
+    elevenMonthAgo.setMonth(now.getMonth() - 11);
+    const tenMonthAgo = new Date();
+    tenMonthAgo.setMonth(now.getMonth() - 10);
+
     const [pat, pat_visit, pat_vitalsign] = await Promise.all([
-      await db.Pat.findOne({
+      db.Pat.findOne({
         where: {
           hn: form.hn,
         },
@@ -148,20 +180,39 @@ exports.show_pat_form_by_form_id = async (req, res) => {
           },
         ],
       }),
-      await db.PatVisit.findOne({
+      db.PatVisit.findAll({
         where: {
           hn: form.hn,
+          visitdatetime: {
+            // [Op.gte]: oneYearAgo,
+            [Op.gte]: elevenMonthAgo,
+          },
         },
       }),
-      await db.PatVitalSign.findOne({
+      db.PatVitalSign.findAll({
         where: {
           hn: form.hn,
+          dodate: {
+            // [Op.gte]: oneYearAgo,
+            [Op.gte]: tenMonthAgo,
+          },
         },
       }),
     ]);
 
     const result = {
-      data_form: form,
+      data_form: {
+        form, patient_contacts,
+        congenital_disease,
+        contrast_history_status,
+        contrast_allergy_status,
+        seafood_allergy_status,
+        drug_allergy_status,
+        pat_sign,
+        witness_sign,
+        staff_sign,
+        doctor_sign
+      },
       data_pat: { pat, pat_visit, pat_vitalsign },
     };
 
@@ -172,7 +223,8 @@ exports.show_pat_form_by_form_id = async (req, res) => {
 };
 
 exports.edit_form = async (req, res) => {
-  const { id } = res.params;
+  const t = await sequelize.transaction();
+  const { id } = req.params;
   try {
     // function เเปลงค่าว่างเป็น null
     const cleanedBody = emptyToNull(req.body);
@@ -223,82 +275,94 @@ exports.edit_form = async (req, res) => {
         disease,
         lmp,
         consent,
+        form_status: "Save",
       },
       { where: { id: id }, transaction: t },
     );
     const patient_contact = await db.PatientContacts.upsert(
       {
+        form_id: id,
         name,
         relation,
       },
-      { where: { form_id: id }, transaction: t },
+      { transaction: t },
     );
     const congenital_disease = await db.CongenitalDisease.upsert(
       {
+        form_id: id,
         condition_id,
       },
-      { where: { form_id: id }, transaction: t },
+      { transaction: t },
     );
     const contrast_allergy_status = await db.ContrastAllergyStatus.upsert(
       {
+        form_id: id,
         contrast_allergy_id,
         contrast_allergy_symptom,
       },
-      { where: { form_id: id }, transaction: t },
+      { transaction: t },
     );
     const contrast_history_status = await db.ContrastHistoryStatus.upsert(
       {
+        form_id: id,
         contrast_history_id,
       },
-      { where: { form_id: id }, transaction: t },
+      { transaction: t },
     );
     const drug_allergy_status = await db.DrugAllergyStatus.upsert(
       {
+        form_id: id,
         drug_allergy_id,
         drug,
       },
-      { where: { form_id: id }, transaction: t },
+      { transaction: t },
     );
     const seafood_allergy_status = await db.SeafoodAllergyStatus.upsert(
       {
+        form_id: id,
         seafood_allergy_id,
         seafood_allergy_symptom,
       },
-      { where: { form_id: id }, transaction: t },
+      { transaction: t },
     );
     const pat_sign = await db.PatSign.upsert(
       {
-        hn: form.hn,
+        form_id: id,
+        hn: hn,
         patient_sign,
         patient_sign_date,
       },
-      { where: { form_id: id }, transaction: t },
+      { transaction: t },
     );
     const witness_signs = await db.WitnessSign.upsert(
       {
+        form_id: id,
         witness_name,
         witness_sign,
         witness_sign_date,
       },
-      { where: { form_id: id }, transaction: t },
+      { transaction: t },
     );
     const staff_signs = await db.StaffSign.upsert(
       {
+        form_id: id,
         staff_id,
         staff_position,
         staff_sign,
         staff_sign_date,
       },
-      { where: { form_id: id }, transaction: t },
+      { transaction: t },
     );
     const doctor_signs = await db.DoctorSign.upsert(
       {
+        form_id: id,
         doctor_id,
         doctor_sign,
         doctor_sign_date,
       },
-      { where: { form_id: id }, transaction: t },
+      { transaction: t },
     );
+    await t.commit();
 
     // message success
     res.status(200).json({
@@ -317,6 +381,7 @@ exports.edit_form = async (req, res) => {
     });
   } catch (error) {
     //message error
-    (res.status(500), json({ message: error.message }));
+    await t.rollback();
+    res.status(500).json({ message: error.message });
   }
 };

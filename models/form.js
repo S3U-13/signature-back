@@ -5,6 +5,8 @@ const Form = sequelize.define(
   {
     form_type_id: DataTypes.INTEGER,
     hn: DataTypes.INTEGER,
+    visit_id: DataTypes.INTEGER,
+    vitalsign_id: DataTypes.INTEGER,
     disease: DataTypes.STRING,
     lmp: DataTypes.DATE,
     consent: DataTypes.INTEGER,

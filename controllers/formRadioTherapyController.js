@@ -15,23 +15,29 @@ exports.form_list = async (req, res) => {
     });
 
     const data_form_list = [];
-    for (const item of form_list) {
-      const pat = await db.Pat.findByPk(item.hn);
+    for (const item of form_list || []) {
+      const pat = await db.Pat.findOne({
+        where: { hn: item.hn },
+      });
 
       data_form_list.push({
-        id: item.id,
-        hn: item.hn,
+        id: item.id ?? null,
+        hn: item.hn ?? null,
         name: pat ? `${pat.prename}${pat.firstname} ${pat.lastname}` : null,
         form_type: item.FormTypeName ? item.FormTypeName.form_name : null,
-        status: item.form_status,
-        form_type_id: item.form_type_id,
+        status: item.form_status ?? null,
+        form_type_id: item.form_type_id ?? null,
       });
     }
 
     res.json(data_form_list);
   } catch (error) {
     // message error
-    res.status(500).json({ error: "Something went wrong!" });
+    console.error("FORM_LIST_ERROR:", error);
+    return res.status(500).json({
+      message: "Something went wrong!",
+      error: error.message,
+    });
   }
 };
 
@@ -76,7 +82,8 @@ exports.crate_form_by_doc = async (req, res) => {
     // function เเปลงค่าว่างเป็น null
     const cleanedBody = emptyToNull(req.body);
     // ประกาศ field รับค่า req
-    const { form_type_id, hn, disease, lmp, consent } = cleanedBody;
+    const { form_type_id, hn, visit_id, vitalsign_id, disease, lmp, consent } =
+      cleanedBody;
 
     // ประกาศ field สำคัญ ที่ req ต้อง การ
     const requiredFields = ["hn", "form_type_id"];
@@ -90,6 +97,8 @@ exports.crate_form_by_doc = async (req, res) => {
     const form = await db.Form.create({
       form_type_id,
       hn,
+      visit_id,
+      vitalsign_id,
       disease,
       lmp,
       consent,
@@ -117,7 +126,7 @@ exports.show_pat_form_by_form_id = async (req, res) => {
       pat_sign,
       witness_sign,
       staff_sign,
-      doctor_sign
+      doctor_sign,
     ] = await Promise.all([
       db.Form.findOne({
         where: { id: id },
@@ -202,7 +211,8 @@ exports.show_pat_form_by_form_id = async (req, res) => {
 
     const result = {
       data_form: {
-        form, patient_contacts,
+        form,
+        patient_contacts,
         congenital_disease,
         contrast_history_status,
         contrast_allergy_status,
@@ -211,7 +221,7 @@ exports.show_pat_form_by_form_id = async (req, res) => {
         pat_sign,
         witness_sign,
         staff_sign,
-        doctor_sign
+        doctor_sign,
       },
       data_pat: { pat, pat_visit, pat_vitalsign },
     };
@@ -271,11 +281,10 @@ exports.edit_form = async (req, res) => {
     const form = await db.Form.update(
       {
         form_type_id,
-        hn,
         disease,
         lmp,
         consent,
-        form_status: "Save",
+        form_status: "Saved",
       },
       { where: { id: id }, transaction: t },
     );

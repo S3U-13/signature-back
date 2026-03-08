@@ -18,6 +18,14 @@ module.exports = {
         allowNull: true,
         type: Sequelize.INTEGER,
       },
+      visit_id: {
+        allowNull: true,
+        type: Sequelize.INTEGER,
+      },
+      vitalsign_id: {
+        allowNull: true,
+        type: Sequelize.INTEGER,
+      },
       disease: {
         allowNull: true,
         type: Sequelize.STRING,

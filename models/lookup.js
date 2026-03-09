@@ -11,6 +11,7 @@ const Lookup = sequelize.define(
       autoIncrement: true,
     },
     lookupname: DataTypes.STRING,
+    active: DataTypes.STRING
   },
   {
     tableName: "lookup",

@@ -19,6 +19,7 @@ const formRadioTherapyController = require("../controllers/formRadioTherapyContr
 router.get("/form", formController.form);
 
 router.get("/choice", choiceController.choice);
+router.get("/prename", patController.prename)
 
 router.get("/pat/:value", patController.pat);
 router.get("/pat_visit/:hn", patController.pat_visit_by_hn);

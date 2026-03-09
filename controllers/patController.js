@@ -18,9 +18,9 @@ exports.pat = async (req, res) => {
     });
 
     if (!pat) return res.status(404).json({ error: "Not found" });
-    res.status(200).json(pat);
+    return res.status(200).json(pat);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    return res.status(500).json({ error: error.message });
   }
 };
 
@@ -37,9 +37,9 @@ exports.pat_visit_by_hn = async (req, res) => {
         },
       },
     })
-    res.status(200).json(pat_visit);
+    return res.status(200).json(pat_visit);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    return res.status(500).json({ error: error.message });
   }
 }
 
@@ -56,9 +56,23 @@ exports.pat_vitalsign_by_pat_visit = async (req, res) => {
       }
     });
 
-    res.status(200).json(pat_vitalsign);
+    return res.status(200).json(pat_vitalsign);
   } catch (error) {
-    res.status(500).json({ error: error.message })
+    return res.status(500).json({ error: error.message })
+  }
+}
+
+exports.prename = async (req, res) => {
+  try {
+    const prename = await db.Lookup.findAll({
+      where: {
+        lookuptypeid: 17,
+        active: "Y"
+      }
+    })
+    return res.status(200).json(prename)
+  } catch (error) {
+    return res.status(500).json({ error: error.message })
   }
 }
 

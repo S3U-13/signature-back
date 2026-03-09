@@ -30,7 +30,7 @@ exports.form_list = async (req, res) => {
       });
     }
 
-    res.json(data_form_list);
+    return res.json(data_form_list);
   } catch (error) {
     // message error
     console.error("FORM_LIST_ERROR:", error);
@@ -69,10 +69,10 @@ exports.search_hn_form_list = async (req, res) => {
       });
     }
 
-    res.json(data_form_list);
+    return res.json(data_form_list);
   } catch (error) {
     // message error
-    res.status(500).json({ error: "Something went wrong!" });
+    return res.status(500).json({ error: "Something went wrong!" });
   }
 };
 
@@ -135,7 +135,7 @@ exports.show_pat_form_by_form_id = async (req, res) => {
         ],
       }),
       db.PatientContacts.findOne({ where: { form_id: id } }),
-      db.CongenitalDisease.findOne({ where: { form_id: id } }),
+      db.CongenitalDisease.findAll({ where: { form_id: id } }),
       db.ContrastHistoryStatus.findOne({ where: { form_id: id } }),
       db.ContrastAllergyStatus.findOne({ where: { form_id: id } }),
       db.SeafoodAllergyStatus.findOne({ where: { form_id: id } }),
@@ -189,22 +189,22 @@ exports.show_pat_form_by_form_id = async (req, res) => {
           },
         ],
       }),
-      db.PatVisit.findAll({
+      db.PatVisit.findOne({
         where: {
-          hn: form.hn,
-          visitdatetime: {
-            // [Op.gte]: oneYearAgo,
-            [Op.gte]: elevenMonthAgo,
-          },
+          id: form.visit_id,
+          // visitdatetime: {
+          //   // [Op.gte]: oneYearAgo,
+          //   [Op.gte]: elevenMonthAgo,
+          // },
         },
       }),
-      db.PatVitalSign.findAll({
+      db.PatVitalSign.findOne({
         where: {
-          hn: form.hn,
-          dodate: {
-            // [Op.gte]: oneYearAgo,
-            [Op.gte]: tenMonthAgo,
-          },
+          id: form.vitalsign_id,
+          // dodate: {
+          //   // [Op.gte]: oneYearAgo,
+          //   [Op.gte]: tenMonthAgo,
+          // },
         },
       }),
     ]);
@@ -226,9 +226,9 @@ exports.show_pat_form_by_form_id = async (req, res) => {
       data_pat: { pat, pat_visit, pat_vitalsign },
     };
 
-    res.status(200).json(result);
+    return res.status(200).json(result);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    return res.status(500).json({ message: error.message });
   }
 };
 
@@ -247,7 +247,7 @@ exports.edit_form = async (req, res) => {
       consent,
       name,
       relation,
-      condition_id,
+      congenital_diseases,
       contrast_allergy_id,
       contrast_allergy_symptom,
       contrast_history_id,
@@ -270,17 +270,19 @@ exports.edit_form = async (req, res) => {
     } = cleanedBody;
 
     // ประกาศ field สำคัญ ที่ req ต้อง การ
-    const requiredFields = ["hn", "form_type_id"];
+    const requiredFields = ["hn"];
     for (const field of requiredFields) {
       if (!req.body[field]) {
         return res.status(400).json({ error: `${field} is required` });
       }
     }
 
+    if (!id) {
+      return res.status(400).json({ message: "id is required" });
+    }
     // create data to db
-    const form = await db.Form.update(
+    await db.Form.update(
       {
-        form_type_id,
         disease,
         lmp,
         consent,
@@ -288,109 +290,252 @@ exports.edit_form = async (req, res) => {
       },
       { where: { id: id }, transaction: t },
     );
-    const patient_contact = await db.PatientContacts.upsert(
-      {
-        form_id: id,
-        name,
-        relation,
-      },
-      { transaction: t },
-    );
-    const congenital_disease = await db.CongenitalDisease.upsert(
-      {
-        form_id: id,
-        condition_id,
-      },
-      { transaction: t },
-    );
-    const contrast_allergy_status = await db.ContrastAllergyStatus.upsert(
-      {
-        form_id: id,
-        contrast_allergy_id,
-        contrast_allergy_symptom,
-      },
-      { transaction: t },
-    );
-    const contrast_history_status = await db.ContrastHistoryStatus.upsert(
-      {
-        form_id: id,
-        contrast_history_id,
-      },
-      { transaction: t },
-    );
-    const drug_allergy_status = await db.DrugAllergyStatus.upsert(
-      {
-        form_id: id,
-        drug_allergy_id,
-        drug,
-      },
-      { transaction: t },
-    );
-    const seafood_allergy_status = await db.SeafoodAllergyStatus.upsert(
-      {
-        form_id: id,
-        seafood_allergy_id,
-        seafood_allergy_symptom,
-      },
-      { transaction: t },
-    );
-    const pat_sign = await db.PatSign.upsert(
-      {
-        form_id: id,
-        hn: hn,
-        patient_sign,
-        patient_sign_date,
-      },
-      { transaction: t },
-    );
-    const witness_signs = await db.WitnessSign.upsert(
-      {
-        form_id: id,
-        witness_name,
-        witness_sign,
-        witness_sign_date,
-      },
-      { transaction: t },
-    );
-    const staff_signs = await db.StaffSign.upsert(
-      {
-        form_id: id,
-        staff_id,
-        staff_position,
-        staff_sign,
-        staff_sign_date,
-      },
-      { transaction: t },
-    );
-    const doctor_signs = await db.DoctorSign.upsert(
-      {
-        form_id: id,
-        doctor_id,
-        doctor_sign,
-        doctor_sign_date,
-      },
-      { transaction: t },
-    );
+
+    const [
+      patient_contact_existing,
+      contrast_allergy_status_existing,
+      contrast_history_status_existing,
+      drug_allergy_status_existing,
+      seafood_allergy_status_existing,
+      pat_sign_existing,
+      witness_sign_existing,
+      staff_sign_existing,
+      doctor_sign_existing
+    ] = await Promise.all([
+      db.PatientContacts.findOne(
+        { where: { form_id: id }, },
+      ),
+      db.ContrastAllergyStatus.findOne(
+        { where: { form_id: id }, },
+      ),
+      db.ContrastHistoryStatus.findOne(
+        { where: { form_id: id }, },
+      ),
+      db.DrugAllergyStatus.findOne(
+        { where: { form_id: id }, },
+      ),
+      db.SeafoodAllergyStatus.findOne(
+        { where: { form_id: id }, },
+      ),
+      db.PatSign.findOne(
+        { where: { form_id: id }, },
+      ),
+      db.WitnessSign.findOne(
+        { where: { form_id: id }, },
+      ),
+      db.StaffSign.findOne(
+        { where: { form_id: id }, },
+      ),
+      db.DoctorSign.findOne(
+        { where: { form_id: id }, },
+      ),
+    ]);
+
+    if (patient_contact_existing) {
+      await db.PatientContacts.update(
+        {
+          name,
+          relation,
+        },
+        { where: { form_id: id }, transaction: t },
+      );
+    } else {
+      await db.PatientContacts.create(
+        {
+          form_id: id,
+          name,
+          relation,
+        },
+        { transaction: t },
+      );
+    }
+
+    await db.CongenitalDisease.destroy({
+      where: { form_id: id },
+      transaction: t,
+    });
+
+    if (Array.isArray(congenital_diseases) && congenital_diseases.length) {
+      await db.CongenitalDisease.bulkCreate(
+        congenital_diseases.map((cd) => ({
+          form_id: id,
+          condition_id: cd.condition_id,
+        })),
+        { transaction: t }
+      );
+    }
+
+    if (contrast_allergy_status_existing) {
+      await db.ContrastAllergyStatus.update(
+        {
+          contrast_allergy_id,
+          contrast_allergy_symptom,
+        },
+        { where: { form_id: id }, transaction: t },
+      );
+    } else {
+      await db.ContrastAllergyStatus.create(
+        {
+          form_id: id,
+          contrast_allergy_id,
+          contrast_allergy_symptom,
+        },
+        { transaction: t },
+      );
+    }
+    if (contrast_history_status_existing) {
+      await db.ContrastHistoryStatus.update(
+        {
+          contrast_history_id,
+        },
+        { where: { form_id: id }, transaction: t },
+      );
+    } else {
+      await db.ContrastHistoryStatus.create(
+        {
+          form_id: id,
+          contrast_history_id,
+        },
+        { transaction: t },
+      );
+    }
+    if (drug_allergy_status_existing) {
+      await db.DrugAllergyStatus.update(
+        {
+          drug_allergy_id,
+          drug,
+        },
+        { where: { form_id: id }, transaction: t },
+      );
+    } else {
+      await db.DrugAllergyStatus.create(
+        {
+          form_id: id,
+          drug_allergy_id,
+          drug,
+        },
+        { transaction: t },
+      );
+    }
+    if (seafood_allergy_status_existing) {
+      await db.SeafoodAllergyStatus.update(
+        {
+          seafood_allergy_id,
+          seafood_allergy_symptom,
+        },
+        { where: { form_id: id }, transaction: t },
+      );
+    } else {
+      await db.SeafoodAllergyStatus.create(
+        {
+          form_id: id,
+          seafood_allergy_id,
+          seafood_allergy_symptom,
+        },
+        { transaction: t },
+      );
+    }
+    if (pat_sign_existing) {
+      await db.PatSign.update(
+        {
+          hn: hn,
+          patient_sign,
+          patient_sign_date,
+        },
+        { where: { form_id: id }, transaction: t },
+      );
+    } else {
+      await db.PatSign.create(
+        {
+          form_id: id,
+          hn: hn,
+          patient_sign,
+          patient_sign_date,
+        },
+        { transaction: t },
+      );
+    }
+    if (witness_sign_existing) {
+      await db.WitnessSign.update(
+        {
+          witness_name,
+          witness_sign,
+          witness_sign_date,
+        },
+        { where: { form_id: id }, transaction: t },
+      );
+    } else {
+      await db.WitnessSign.create(
+        {
+          form_id: id,
+          witness_name,
+          witness_sign,
+          witness_sign_date,
+        },
+        { transaction: t },
+      );
+    }
+    if (staff_sign_existing) {
+      await db.StaffSign.update(
+        {
+          staff_id,
+          staff_position,
+          staff_sign,
+          staff_sign_date,
+        },
+        { where: { form_id: id }, transaction: t },
+      );
+    } else {
+      await db.StaffSign.create(
+        {
+          form_id: id,
+          staff_id,
+          staff_position,
+          staff_sign,
+          staff_sign_date,
+        },
+        { transaction: t },
+      );
+    }
+    if (doctor_sign_existing) {
+      await db.DoctorSign.update(
+        {
+          doctor_id,
+          doctor_sign,
+          doctor_sign_date,
+        },
+        { where: { form_id: id }, transaction: t },
+      );
+    } else {
+      await db.DoctorSign.create(
+        {
+          form_id: id,
+          doctor_id,
+          doctor_sign,
+          doctor_sign_date,
+        },
+        { transaction: t },
+      );
+    }
     await t.commit();
 
     // message success
-    res.status(200).json({
+    return res.status(200).json({
       message: "เเก้ข้อมูลสำเร็จ",
       form,
-      patient_contact,
-      congenital_disease,
-      contrast_allergy_status,
-      contrast_history_status,
-      drug_allergy_status,
-      seafood_allergy_status,
-      pat_sign,
-      witness_signs,
-      staff_signs,
-      doctor_signs,
+      patient_contact_existing,
+      contrast_allergy_status_existing,
+      contrast_history_status_existing,
+      drug_allergy_status_existing,
+      seafood_allergy_status_existing,
+      pat_sign_existing,
+      witness_sign_existing,
+      staff_sign_existing,
+      doctor_sign_existing
     });
   } catch (error) {
     //message error
     await t.rollback();
-    res.status(500).json({ message: error.message });
+    return res.status(500).json({ message: error.message });
   }
 };

@@ -2,6 +2,15 @@ const db = require("../models");
 const { sequelize } = db;
 const { Op, Model } = require("sequelize");
 const { emptyToNull } = require("../services/empty-to-null");
+const {
+  simulationConsentFormService,
+} = require("../services/simulationConsentFormService");
+const {
+  radiotherapyConsentFormService,
+} = require("../services/radiotherapyConsentFormService");
+const {
+  brachytherapyConsentFormService,
+} = require("../services/brachytherapyConsentFormService");
 
 // create function form_list
 exports.form_list = async (req, res) => {
@@ -233,309 +242,38 @@ exports.show_pat_form_by_form_id = async (req, res) => {
 };
 
 exports.edit_form = async (req, res) => {
-  const t = await sequelize.transaction();
-  const { id } = req.params;
   try {
-    // function เเปลงค่าว่างเป็น null
-    const cleanedBody = emptyToNull(req.body);
-    // ประกาศ field รับค่า req
-    const {
-      form_type_id,
-      hn,
-      disease,
-      lmp,
-      consent,
-      name,
-      relation,
-      congenital_diseases,
-      contrast_allergy_id,
-      contrast_allergy_symptom,
-      contrast_history_id,
-      drug_allergy_id,
-      drug,
-      seafood_allergy_id,
-      seafood_allergy_symptom,
-      patient_sign,
-      patient_sign_date,
-      witness_name,
-      witness_sign,
-      witness_sign_date,
-      staff_id,
-      staff_position,
-      staff_sign,
-      staff_sign_date,
-      doctor_id,
-      doctor_sign,
-      doctor_sign_date,
-    } = cleanedBody;
-
-    // ประกาศ field สำคัญ ที่ req ต้อง การ
-    const requiredFields = ["hn"];
-    for (const field of requiredFields) {
-      if (!req.body[field]) {
-        return res.status(400).json({ error: `${field} is required` });
-      }
-    }
+    const { id } = req.params;
 
     if (!id) {
       return res.status(400).json({ message: "id is required" });
     }
-    // create data to db
-    await db.Form.update(
-      {
-        disease,
-        lmp,
-        consent,
-        form_status: "Saved",
-      },
-      { where: { id: id }, transaction: t },
-    );
 
-    const [
-      patient_contact_existing,
-      contrast_allergy_status_existing,
-      contrast_history_status_existing,
-      drug_allergy_status_existing,
-      seafood_allergy_status_existing,
-      pat_sign_existing,
-      witness_sign_existing,
-      staff_sign_existing,
-      doctor_sign_existing
-    ] = await Promise.all([
-      db.PatientContacts.findOne(
-        { where: { form_id: id }, },
-      ),
-      db.ContrastAllergyStatus.findOne(
-        { where: { form_id: id }, },
-      ),
-      db.ContrastHistoryStatus.findOne(
-        { where: { form_id: id }, },
-      ),
-      db.DrugAllergyStatus.findOne(
-        { where: { form_id: id }, },
-      ),
-      db.SeafoodAllergyStatus.findOne(
-        { where: { form_id: id }, },
-      ),
-      db.PatSign.findOne(
-        { where: { form_id: id }, },
-      ),
-      db.WitnessSign.findOne(
-        { where: { form_id: id }, },
-      ),
-      db.StaffSign.findOne(
-        { where: { form_id: id }, },
-      ),
-      db.DoctorSign.findOne(
-        { where: { form_id: id }, },
-      ),
-    ]);
+    const form = await db.Form.findOne({ where: { id } });
 
-    if (patient_contact_existing) {
-      await db.PatientContacts.update(
-        {
-          name,
-          relation,
-        },
-        { where: { form_id: id }, transaction: t },
-      );
-    } else {
-      await db.PatientContacts.create(
-        {
-          form_id: id,
-          name,
-          relation,
-        },
-        { transaction: t },
-      );
+    if (!form) {
+      return res.status(404).json({ message: "Form not found" });
     }
 
-    await db.CongenitalDisease.destroy({
-      where: { form_id: id },
-      transaction: t,
-    });
+    switch (form.form_type_id) {
+      case 1:
+        await simulationConsentFormService(id, req.body);
+        break;
 
-    if (Array.isArray(congenital_diseases) && congenital_diseases.length) {
-      await db.CongenitalDisease.bulkCreate(
-        congenital_diseases.map((cd) => ({
-          form_id: id,
-          condition_id: cd.condition_id,
-        })),
-        { transaction: t }
-      );
+      case 2:
+        await radiotherapyConsentFormService(id, req.body);
+        break;
+
+      case 3:
+        await brachytherapyConsentFormService(id, req.body);
+        break;
+
+      default:
+        return res.status(400).json({ message: "Invalid form type" });
     }
 
-    if (contrast_allergy_status_existing) {
-      await db.ContrastAllergyStatus.update(
-        {
-          contrast_allergy_id,
-          contrast_allergy_symptom,
-        },
-        { where: { form_id: id }, transaction: t },
-      );
-    } else {
-      await db.ContrastAllergyStatus.create(
-        {
-          form_id: id,
-          contrast_allergy_id,
-          contrast_allergy_symptom,
-        },
-        { transaction: t },
-      );
-    }
-    if (contrast_history_status_existing) {
-      await db.ContrastHistoryStatus.update(
-        {
-          contrast_history_id,
-        },
-        { where: { form_id: id }, transaction: t },
-      );
-    } else {
-      await db.ContrastHistoryStatus.create(
-        {
-          form_id: id,
-          contrast_history_id,
-        },
-        { transaction: t },
-      );
-    }
-    if (drug_allergy_status_existing) {
-      await db.DrugAllergyStatus.update(
-        {
-          drug_allergy_id,
-          drug,
-        },
-        { where: { form_id: id }, transaction: t },
-      );
-    } else {
-      await db.DrugAllergyStatus.create(
-        {
-          form_id: id,
-          drug_allergy_id,
-          drug,
-        },
-        { transaction: t },
-      );
-    }
-    if (seafood_allergy_status_existing) {
-      await db.SeafoodAllergyStatus.update(
-        {
-          seafood_allergy_id,
-          seafood_allergy_symptom,
-        },
-        { where: { form_id: id }, transaction: t },
-      );
-    } else {
-      await db.SeafoodAllergyStatus.create(
-        {
-          form_id: id,
-          seafood_allergy_id,
-          seafood_allergy_symptom,
-        },
-        { transaction: t },
-      );
-    }
-    if (pat_sign_existing) {
-      await db.PatSign.update(
-        {
-          hn: hn,
-          patient_sign,
-          patient_sign_date,
-        },
-        { where: { form_id: id }, transaction: t },
-      );
-    } else {
-      await db.PatSign.create(
-        {
-          form_id: id,
-          hn: hn,
-          patient_sign,
-          patient_sign_date,
-        },
-        { transaction: t },
-      );
-    }
-    if (witness_sign_existing) {
-      await db.WitnessSign.update(
-        {
-          witness_name,
-          witness_sign,
-          witness_sign_date,
-        },
-        { where: { form_id: id }, transaction: t },
-      );
-    } else {
-      await db.WitnessSign.create(
-        {
-          form_id: id,
-          witness_name,
-          witness_sign,
-          witness_sign_date,
-        },
-        { transaction: t },
-      );
-    }
-    if (staff_sign_existing) {
-      await db.StaffSign.update(
-        {
-          staff_id,
-          staff_position,
-          staff_sign,
-          staff_sign_date,
-        },
-        { where: { form_id: id }, transaction: t },
-      );
-    } else {
-      await db.StaffSign.create(
-        {
-          form_id: id,
-          staff_id,
-          staff_position,
-          staff_sign,
-          staff_sign_date,
-        },
-        { transaction: t },
-      );
-    }
-    if (doctor_sign_existing) {
-      await db.DoctorSign.update(
-        {
-          doctor_id,
-          doctor_sign,
-          doctor_sign_date,
-        },
-        { where: { form_id: id }, transaction: t },
-      );
-    } else {
-      await db.DoctorSign.create(
-        {
-          form_id: id,
-          doctor_id,
-          doctor_sign,
-          doctor_sign_date,
-        },
-        { transaction: t },
-      );
-    }
-    await t.commit();
-
-    // message success
-    return res.status(200).json({
-      message: "เเก้ข้อมูลสำเร็จ",
-      form,
-      patient_contact_existing,
-      contrast_allergy_status_existing,
-      contrast_history_status_existing,
-      drug_allergy_status_existing,
-      seafood_allergy_status_existing,
-      pat_sign_existing,
-      witness_sign_existing,
-      staff_sign_existing,
-      doctor_sign_existing
-    });
+    return res.json({ message: "update success" });
   } catch (error) {
-    //message error
-    await t.rollback();
     return res.status(500).json({ message: error.message });
   }
 };

@@ -255,6 +255,11 @@ exports.simulationConsentFormService = async (id, body) => {
         { transaction: t },
       );
     }
+    let buffer_doctor;
+    if (doctor_sign) {
+      const base64 = doctor_sign.replace(/^data:image\/png;base64,/, "");
+      buffer_pat = Buffer.from(base64, "base64");
+    }
     if (doctor_sign_existing) {
       await db.DoctorSign.update(
         {

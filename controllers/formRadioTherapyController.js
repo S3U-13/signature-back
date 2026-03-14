@@ -11,6 +11,7 @@ const {
 const {
   brachytherapyConsentFormService,
 } = require("../services/brachytherapyConsentFormService");
+const { signBase64 } = require("../services/singBase64Service");
 
 // create function form_list
 exports.form_list = async (req, res) => {
@@ -87,23 +88,12 @@ exports.search_hn_form_list = async (req, res) => {
 
 // create create_form_by_doc
 exports.crate_form_by_doc = async (req, res) => {
+  const t = await sequelize.transaction();
+
   try {
-    // function เเปลงค่าว่างเป็น null
     const cleanedBody = emptyToNull(req.body);
-    // ประกาศ field รับค่า req
-    const { form_type_id, hn, visit_id, vitalsign_id, disease, lmp, consent } =
-      cleanedBody;
 
-    // ประกาศ field สำคัญ ที่ req ต้อง การ
-    const requiredFields = ["hn", "form_type_id"];
-    for (const field of requiredFields) {
-      if (!req.body[field]) {
-        return res.status(400).json({ error: `${field} is required` });
-      }
-    }
-
-    // create data to db
-    const form = await db.Form.create({
+    const {
       form_type_id,
       hn,
       visit_id,
@@ -111,13 +101,61 @@ exports.crate_form_by_doc = async (req, res) => {
       disease,
       lmp,
       consent,
-    });
+      doctor_id,
+      doctor_sign,
+      doctor_sign_date,
+    } = cleanedBody;
 
-    // message success
-    res.status(200).json({ message: "เพิ่มข้อมูลสำเร็จ", form });
+    const requiredFields = ["hn", "form_type_id"];
+    for (const field of requiredFields) {
+      if (!cleanedBody[field]) {
+        return res.status(400).json({ error: `${field} is required` });
+      }
+    }
+
+    const form = await db.Form.create(
+      {
+        form_type_id,
+        hn,
+        visit_id,
+        vitalsign_id,
+        disease,
+        lmp,
+        consent,
+      },
+      { transaction: t },
+    );
+
+    let buffer_doctor;
+
+    if (doctor_sign) {
+      const base64 = doctor_sign.replace(/^data:image\/png;base64,/, "");
+      buffer_doctor = Buffer.from(base64, "base64");
+    }
+
+    const doctor_signs = await db.DoctorSign.create(
+      {
+        form_id: form.id,
+        doctor_id,
+        doctor_sign: buffer_doctor,
+        doctor_sign_date,
+      },
+      { transaction: t },
+    );
+
+    await t.commit();
+
+    res.status(200).json({
+      message: "เพิ่มข้อมูลสำเร็จ",
+      form,
+      doctor_signs,
+    });
   } catch (error) {
-    //message error
-    (res.status(500), json({ message: error.message }));
+    await t.rollback();
+
+    res.status(500).json({
+      message: error.message,
+    });
   }
 };
 
@@ -218,6 +256,17 @@ exports.show_pat_form_by_form_id = async (req, res) => {
       }),
     ]);
 
+    let docSign = null;
+
+    if (doctor_sign?.doctor_sign) {
+      docSign = signBase64(doctor_sign?.doctor_sign);
+    }
+    const doctorsign = {
+      doctor_id: doctor_sign.doctor_id,
+      doctor_sign_date: doctor_sign.doctor_sign_date,
+      docSign,
+    };
+
     const result = {
       data_form: {
         form,
@@ -230,7 +279,7 @@ exports.show_pat_form_by_form_id = async (req, res) => {
         pat_sign,
         witness_sign,
         staff_sign,
-        doctor_sign,
+        doctorsign,
       },
       data_pat: { pat, pat_visit, pat_vitalsign },
     };

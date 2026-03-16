@@ -174,6 +174,7 @@ exports.show_pat_form_by_form_id = async (req, res) => {
       witness_sign,
       staff_sign,
       doctor_sign,
+      nurse_sign,
     ] = await Promise.all([
       db.Form.findOne({
         where: { id: id },
@@ -191,6 +192,7 @@ exports.show_pat_form_by_form_id = async (req, res) => {
       db.WitnessSign.findOne({ where: { form_id: id } }),
       db.StaffSign.findOne({ where: { form_id: id } }),
       db.DoctorSign.findOne({ where: { form_id: id } }),
+      db.NurseSign.findOne({ where: { form_id: id } }),
     ]);
 
     if (!form) {
@@ -215,6 +217,7 @@ exports.show_pat_form_by_form_id = async (req, res) => {
             model: db.Lookup,
             as: "occupation_detail",
             attributes: ["lookupname"],
+            where: { lookuptypeid: 16 },
           },
           {
             model: db.Lookup,
@@ -256,6 +259,52 @@ exports.show_pat_form_by_form_id = async (req, res) => {
       }),
     ]);
 
+    //patient_sign
+    let PatientSign = null;
+
+    if (pat_sign?.patient_sign) {
+      PatientSign = signBase64(pat_sign?.patient_sign);
+    }
+    const patientsign = {
+      hn: pat_sign?.hn,
+      patient_sign_date: pat_sign?.patient_sign_date,
+      patient_sign: PatientSign,
+    };
+    //witness_sign
+    let WitnessSign = null;
+
+    if (witness_sign?.witness_sign) {
+      WitnessSign = signBase64(witness_sign?.witness_sign);
+    }
+    const witnesssign = {
+      witness_name: witness_sign?.witness_name,
+      witness_sign_date: witness_sign?.witness_sign_date,
+      witness_sign: WitnessSign,
+    };
+    //staff_sign
+    let StaffSign = null;
+
+    if (staff_sign?.staff_sign) {
+      StaffSign = signBase64(staff_sign?.staff_sign);
+    }
+    const staffsign = {
+      staff_id: staff_sign?.staff_id,
+      staff_sign_date: staff_sign?.staff_sign_date,
+      staff_sign: StaffSign,
+    };
+    //nurse_sign
+    let NurseSign = null;
+
+    if (nurse_sign?.nurse_sign) {
+      NurseSign = signBase64(nurse_sign?.nurse_sign);
+    }
+    const nursesign = {
+      nurse_id: nurse_sign?.nurse_id,
+      nurse_sign_date: nurse_sign?.nurse_sign_date,
+      nurse_sign: NurseSign,
+    };
+
+    //doctor sing
     let docSign = null;
 
     if (doctor_sign?.doctor_sign) {
@@ -276,9 +325,10 @@ exports.show_pat_form_by_form_id = async (req, res) => {
         contrast_allergy_status,
         seafood_allergy_status,
         drug_allergy_status,
-        pat_sign,
-        witness_sign,
-        staff_sign,
+        patientsign,
+        witnesssign,
+        staffsign,
+        nursesign,
         doctorsign,
       },
       data_pat: { pat, pat_visit, pat_vitalsign },

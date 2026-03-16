@@ -28,6 +28,7 @@ db.PatSign = require("./pat_sign");
 db.WitnessSign = require("./witness_sign");
 db.StaffSign = require("./staff_sign");
 db.DoctorSign = require("./doctor_sign");
+db.NurseSign = require("./nurse_sign");
 
 db.Pat = require("./pat");
 db.PatVisit = require("./pat_visit");
@@ -95,6 +96,10 @@ db.Form.hasOne(db.StaffSign, {
 db.Form.hasOne(db.DoctorSign, {
   foreignKey: "form_id",
   as: "DoctorSigns",
+});
+db.Form.hasOne(db.NurseSign, {
+  foreignKey: "form_id",
+  as: "NurseSigns",
 });
 
 // belongsTo

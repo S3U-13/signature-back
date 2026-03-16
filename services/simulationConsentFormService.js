@@ -285,6 +285,9 @@ exports.simulationConsentFormService = async (id, body) => {
       );
     }
     await t.commit();
+
+    console.log("nurse_sign type:", typeof nurse_sign);
+    console.log("nurse_sign:", nurse_sign);
     return true;
   } catch (error) {
     await t.rollback();
@@ -292,4 +295,3 @@ exports.simulationConsentFormService = async (id, body) => {
     throw error;
   }
 };
-

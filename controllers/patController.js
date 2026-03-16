@@ -82,6 +82,18 @@ exports.prename = async (req, res) => {
       },
     });
     return res.status(200).json(prename);
+  } catch (error) {}
+};
+
+exports.relation = async (req, res) => {
+  try {
+    const relation = await db.Lookup.findAll({
+      where: {
+        lookuptypeid: 19,
+        active: "Y",
+      },
+    });
+    return res.status(200).json(relation);
   } catch (error) {
     return res.status(500).json({ error: error.message });
   }

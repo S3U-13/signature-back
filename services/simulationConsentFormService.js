@@ -1,7 +1,8 @@
 const db = require("../models");
 const { sequelize } = db;
 const { Op, Model } = require("sequelize");
-const { emptyToNull } = require("./empty-to-null");
+const { emptyToNull } = require("../utils/empty-to-null");
+const { base64ToBuffer } = require("../utils/signatureInputHelper");
 
 exports.simulationConsentFormService = async (id, body) => {
   const t = await sequelize.transaction();
@@ -34,9 +35,9 @@ exports.simulationConsentFormService = async (id, body) => {
       staff_position,
       staff_sign,
       staff_sign_date,
-      doctor_id,
-      doctor_sign,
-      doctor_sign_date,
+      nurse_id,
+      nurse_sign,
+      nurse_sign_date,
     } = cleanedBody;
 
     // ประกาศ field สำคัญ ที่ req ต้อง การ
@@ -67,7 +68,7 @@ exports.simulationConsentFormService = async (id, body) => {
       pat_sign_existing,
       witness_sign_existing,
       staff_sign_existing,
-      doctor_sign_existing,
+      nurse_sign_existing,
     ] = await Promise.all([
       db.PatientContacts.findOne({ where: { form_id: id }, transaction: t }),
       db.ContrastAllergyStatus.findOne({
@@ -86,7 +87,7 @@ exports.simulationConsentFormService = async (id, body) => {
       db.PatSign.findOne({ where: { form_id: id }, transaction: t }),
       db.WitnessSign.findOne({ where: { form_id: id }, transaction: t }),
       db.StaffSign.findOne({ where: { form_id: id }, transaction: t }),
-      db.DoctorSign.findOne({ where: { form_id: id }, transaction: t }),
+      db.NurseSign.findOne({ where: { form_id: id }, transaction: t }),
     ]);
 
     if (patient_contact_existing) {
@@ -193,11 +194,13 @@ exports.simulationConsentFormService = async (id, body) => {
         { transaction: t },
       );
     }
+
+    const patient_buffer = base64ToBuffer(patient_sign);
     if (pat_sign_existing) {
       await db.PatSign.update(
         {
           hn: hn,
-          patient_sign,
+          patient_sign: patient_buffer,
           patient_sign_date,
         },
         { where: { form_id: id }, transaction: t },
@@ -207,17 +210,19 @@ exports.simulationConsentFormService = async (id, body) => {
         {
           form_id: id,
           hn: hn,
-          patient_sign,
+          patient_sign: patient_buffer,
           patient_sign_date,
         },
         { transaction: t },
       );
     }
+
+    const witness_buffer = base64ToBuffer(witness_sign);
     if (witness_sign_existing) {
       await db.WitnessSign.update(
         {
           witness_name,
-          witness_sign,
+          witness_sign: witness_buffer,
           witness_sign_date,
         },
         { where: { form_id: id }, transaction: t },
@@ -227,18 +232,20 @@ exports.simulationConsentFormService = async (id, body) => {
         {
           form_id: id,
           witness_name,
-          witness_sign,
+          witness_sign: witness_buffer,
           witness_sign_date,
         },
         { transaction: t },
       );
     }
+
+    const staff_buffer = base64ToBuffer(staff_sign);
     if (staff_sign_existing) {
       await db.StaffSign.update(
         {
           staff_id,
           staff_position,
-          staff_sign,
+          staff_sign: staff_buffer,
           staff_sign_date,
         },
         { where: { form_id: id }, transaction: t },
@@ -249,33 +256,30 @@ exports.simulationConsentFormService = async (id, body) => {
           form_id: id,
           staff_id,
           staff_position,
-          staff_sign,
+          staff_sign: staff_buffer,
           staff_sign_date,
         },
         { transaction: t },
       );
     }
-    let buffer_doctor;
-    if (doctor_sign) {
-      const base64 = doctor_sign.replace(/^data:image\/png;base64,/, "");
-      buffer_pat = Buffer.from(base64, "base64");
-    }
-    if (doctor_sign_existing) {
-      await db.DoctorSign.update(
+
+    const nurse_buffer = base64ToBuffer(nurse_sign);
+    if (nurse_sign_existing) {
+      await db.NurseSign.update(
         {
-          doctor_id,
-          doctor_sign,
-          doctor_sign_date,
+          nurse_id,
+          nurse_sign: nurse_buffer,
+          nurse_sign_date,
         },
         { where: { form_id: id }, transaction: t },
       );
     } else {
-      await db.DoctorSign.create(
+      await db.NurseSign.create(
         {
           form_id: id,
-          doctor_id,
-          doctor_sign,
-          doctor_sign_date,
+          nurse_id,
+          nurse_sign: nurse_buffer,
+          nurse_sign_date,
         },
         { transaction: t },
       );
@@ -288,175 +292,4 @@ exports.simulationConsentFormService = async (id, body) => {
     throw error;
   }
 };
-// const db = require("../models");
-// const { sequelize } = db;
-// const { emptyToNull } = require("./empty-to-null");
 
-// exports.simulationConsentFormService = async (id, body) => {
-//   const t = await sequelize.transaction();
-
-//   try {
-//     const cleanedBody = emptyToNull(body);
-
-//     const {
-//       hn,
-//       disease,
-//       lmp,
-//       consent,
-//       name,
-//       relation,
-//       congenital_diseases,
-//       contrast_allergy_id,
-//       contrast_allergy_symptom,
-//       contrast_history_id,
-//       drug_allergy_id,
-//       drug,
-//       seafood_allergy_id,
-//       seafood_allergy_symptom,
-//       patient_sign,
-//       patient_sign_date,
-//       witness_name,
-//       witness_sign,
-//       witness_sign_date,
-//       staff_id,
-//       staff_position,
-//       staff_sign,
-//       staff_sign_date,
-//       doctor_id,
-//       doctor_sign,
-//       doctor_sign_date,
-//     } = cleanedBody;
-
-//     if (!hn) {
-//       throw new Error("hn is required");
-//     }
-
-//     // update form
-//     await db.Form.update(
-//       {
-//         disease,
-//         lmp,
-//         consent,
-//         form_status: "Saved",
-//       },
-//       { where: { id }, transaction: t },
-//     );
-
-//     // patient contact
-//     await db.PatientContacts.upsert(
-//       {
-//         form_id: id,
-//         name,
-//         relation,
-//       },
-//       { transaction: t },
-//     );
-
-//     // congenital disease (array)
-//     await db.CongenitalDisease.destroy({
-//       where: { form_id: id },
-//       transaction: t,
-//     });
-
-//     if (Array.isArray(congenital_diseases) && congenital_diseases.length) {
-//       await db.CongenitalDisease.bulkCreate(
-//         congenital_diseases.map((cd) => ({
-//           form_id: id,
-//           condition_id: cd.condition_id,
-//         })),
-//         { transaction: t },
-//       );
-//     }
-
-//     // contrast allergy
-//     await db.ContrastAllergyStatus.upsert(
-//       {
-//         form_id: id,
-//         contrast_allergy_id,
-//         contrast_allergy_symptom,
-//       },
-//       { transaction: t },
-//     );
-
-//     // contrast history
-//     await db.ContrastHistoryStatus.upsert(
-//       {
-//         form_id: id,
-//         contrast_history_id,
-//       },
-//       { transaction: t },
-//     );
-
-//     // drug allergy
-//     await db.DrugAllergyStatus.upsert(
-//       {
-//         form_id: id,
-//         drug_allergy_id,
-//         drug,
-//       },
-//       { transaction: t },
-//     );
-
-//     // seafood allergy
-//     await db.SeafoodAllergyStatus.upsert(
-//       {
-//         form_id: id,
-//         seafood_allergy_id,
-//         seafood_allergy_symptom,
-//       },
-//       { transaction: t },
-//     );
-
-//     // patient sign
-//     await db.PatSign.upsert(
-//       {
-//         form_id: id,
-//         hn,
-//         patient_sign,
-//         patient_sign_date,
-//       },
-//       { transaction: t },
-//     );
-
-//     // witness sign
-//     await db.WitnessSign.upsert(
-//       {
-//         form_id: id,
-//         witness_name,
-//         witness_sign,
-//         witness_sign_date,
-//       },
-//       { transaction: t },
-//     );
-
-//     // staff sign
-//     await db.StaffSign.upsert(
-//       {
-//         form_id: id,
-//         staff_id,
-//         staff_position,
-//         staff_sign,
-//         staff_sign_date,
-//       },
-//       { transaction: t },
-//     );
-
-//     // doctor sign
-//     await db.DoctorSign.upsert(
-//       {
-//         form_id: id,
-//         doctor_id,
-//         doctor_sign,
-//         doctor_sign_date,
-//       },
-//       { transaction: t },
-//     );
-
-//     await t.commit();
-
-//     return true;
-//   } catch (error) {
-//     await t.rollback();
-//     throw error;
-//   }
-// };

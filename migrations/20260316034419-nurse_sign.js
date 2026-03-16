@@ -9,32 +9,27 @@ module.exports = {
      * Example:
      * await queryInterface.createTable('users', { id: Sequelize.INTEGER });
      */
-    await queryInterface.createTable("staff_note", {
+    await queryInterface.createTable("nurse_sign", {
       id: {
         primaryKey: true,
-        allowNull: false,
         autoIncrement: true,
+        allowNull: false,
         type: Sequelize.INTEGER,
       },
-      cr: {
+      form_id: {
         allowNull: true,
-        type: Sequelize.STRING,
+        type: Sequelize.INTEGER,
       },
-      egfr: {
+      nurse_id: {
         allowNull: true,
-        type: Sequelize.STRING,
+        type: Sequelize.INTEGER,
       },
-      contrast_media: {
+      nurse_sign: { allowNull: true, type: Sequelize.BLOB },
+      nurse_sign_date: { allowNull: true, type: Sequelize.DATE },
+      flag_status: {
+        defaultValue: "a",
         allowNull: true,
-        type: Sequelize.STRING,
-      },
-      volume_cc: {
-        allowNull: true,
-        type: Sequelize.STRING,
-      },
-      note: {
-        allowNull: true,
-        type: Sequelize.TEXT,
+        type: Sequelize.STRING(1),
       },
       createdAt: {
         allowNull: true,
@@ -54,6 +49,6 @@ module.exports = {
      * Example:
      * await queryInterface.dropTable('users');
      */
-    await queryInterface.dropTable("staff_note");
+    await queryInterface.dropTable("nurse_sign");
   },
 };

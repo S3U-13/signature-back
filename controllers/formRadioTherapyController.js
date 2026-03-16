@@ -1,7 +1,7 @@
 const db = require("../models");
 const { sequelize } = db;
 const { Op, Model } = require("sequelize");
-const { emptyToNull } = require("../services/empty-to-null");
+const { emptyToNull } = require("../utils/empty-to-null");
 const {
   simulationConsentFormService,
 } = require("../services/simulationConsentFormService");
@@ -11,7 +11,7 @@ const {
 const {
   brachytherapyConsentFormService,
 } = require("../services/brachytherapyConsentFormService");
-const { signBase64 } = require("../services/singBase64Service");
+const { signBase64 } = require("../utils/singBase64Service");
 
 // create function form_list
 exports.form_list = async (req, res) => {

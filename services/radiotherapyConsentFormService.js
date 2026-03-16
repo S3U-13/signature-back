@@ -1,7 +1,8 @@
 const db = require("../models");
 const { sequelize } = db;
 const { Op, Model } = require("sequelize");
-const { emptyToNull } = require("./empty-to-null");
+const { emptyToNull } = require("../utils/empty-to-null");
+const { base64ToBuffer } = require("../utils/signatureInputHelper");
 
 exports.radiotherapyConsentFormService = async (id, body) => {
   const t = await sequelize.transaction();
@@ -26,9 +27,9 @@ exports.radiotherapyConsentFormService = async (id, body) => {
       staff_position,
       staff_sign,
       staff_sign_date,
-      doctor_id,
-      doctor_sign,
-      doctor_sign_date,
+      nurse_id,
+      nurse_sign,
+      nurse_sign_date,
     } = cleanedBody;
 
     // ประกาศ field สำคัญ ที่ req ต้อง การ
@@ -55,13 +56,13 @@ exports.radiotherapyConsentFormService = async (id, body) => {
       pat_sign_existing,
       witness_sign_existing,
       staff_sign_existing,
-      doctor_sign_existing,
+      nurse_sign_existing,
     ] = await Promise.all([
       db.PatientContacts.findOne({ where: { form_id: id } }),
       db.PatSign.findOne({ where: { form_id: id } }),
       db.WitnessSign.findOne({ where: { form_id: id } }),
       db.StaffSign.findOne({ where: { form_id: id } }),
-      db.DoctorSign.findOne({ where: { form_id: id } }),
+      db.NurseSign.findOne({ where: { form_id: id } }),
     ]);
 
     if (patient_contact_existing) {
@@ -82,11 +83,13 @@ exports.radiotherapyConsentFormService = async (id, body) => {
         { transaction: t },
       );
     }
+
+    const patient_buffer = base64ToBuffer(patient_sign);
     if (pat_sign_existing) {
       await db.PatSign.update(
         {
           hn: hn,
-          patient_sign,
+          patient_sign: patient_buffer,
           patient_sign_date,
         },
         { where: { form_id: id }, transaction: t },
@@ -96,17 +99,19 @@ exports.radiotherapyConsentFormService = async (id, body) => {
         {
           form_id: id,
           hn: hn,
-          patient_sign,
+          patient_sign: patient_buffer,
           patient_sign_date,
         },
         { transaction: t },
       );
     }
+
+    const witness_buffer = base64ToBuffer(witness_sign);
     if (witness_sign_existing) {
       await db.WitnessSign.update(
         {
           witness_name,
-          witness_sign,
+          witness_sign: witness_buffer,
           witness_sign_date,
         },
         { where: { form_id: id }, transaction: t },
@@ -116,18 +121,20 @@ exports.radiotherapyConsentFormService = async (id, body) => {
         {
           form_id: id,
           witness_name,
-          witness_sign,
+          witness_sign: witness_buffer,
           witness_sign_date,
         },
         { transaction: t },
       );
     }
+
+    const staff_buffer = base64ToBuffer(staff_sign);
     if (staff_sign_existing) {
       await db.StaffSign.update(
         {
           staff_id,
           staff_position,
-          staff_sign,
+          staff_sign: staff_buffer,
           staff_sign_date,
         },
         { where: { form_id: id }, transaction: t },
@@ -138,28 +145,30 @@ exports.radiotherapyConsentFormService = async (id, body) => {
           form_id: id,
           staff_id,
           staff_position,
-          staff_sign,
+          staff_sign: staff_buffer,
           staff_sign_date,
         },
         { transaction: t },
       );
     }
-    if (doctor_sign_existing) {
-      await db.DoctorSign.update(
+
+    const nurse_buffer = base64ToBuffer(nurse_sign);
+    if (nurse_sign_existing) {
+      await db.NurseSign.update(
         {
-          doctor_id,
-          doctor_sign,
-          doctor_sign_date,
+          nurse_id,
+          nurse_sign: nurse_buffer,
+          nurse_sign_date,
         },
         { where: { form_id: id }, transaction: t },
       );
     } else {
-      await db.DoctorSign.create(
+      await db.NurseSign.create(
         {
           form_id: id,
-          doctor_id,
-          doctor_sign,
-          doctor_sign_date,
+          nurse_id,
+          nurse_sign: nurse_buffer,
+          nurse_sign_date,
         },
         { transaction: t },
       );

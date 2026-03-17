@@ -60,6 +60,10 @@ module.exports = {
         defaultValue: "a",
         type: Sequelize.STRING(1),
       },
+      date_form: {
+        allowNull: true,
+        type: Sequelize.DATE,
+      },
       createdAt: {
         allowNull: true,
         type: Sequelize.DATE,
@@ -87,7 +91,7 @@ module.exports = {
       },
       relation: {
         allowNull: true,
-        type: Sequelize.STRING,
+        type: Sequelize.INTEGER,
       },
       flag_status: {
         allowNull: true,

@@ -6,7 +6,7 @@ const PatientContact = sequelize.define(
   {
     form_id: DataTypes.INTEGER,
     name: DataTypes.STRING,
-    relation: DataTypes.STRING,
+    relation: DataTypes.INTEGER,
     flag_status: DataTypes.STRING,
   },
   { modelName: "PatientContact", tableName: "patient_contacts" },

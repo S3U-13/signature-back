@@ -2,7 +2,7 @@ const db = require("../models");
 const { sequelize } = db;
 const { Op, Model } = require("sequelize");
 const { emptyToNull } = require("../utils/empty-to-null");
-const { base64ToBuffer } = require("../utils/signatureInputHelper");
+const { signBuffers } = require("../utils/signatureInputHelper");
 
 exports.brachytherapyConsentFormService = async (id, body) => {
   const t = await sequelize.transaction();
@@ -65,6 +65,13 @@ exports.brachytherapyConsentFormService = async (id, body) => {
       db.NurseSign.findOne({ where: { form_id: id } }),
     ]);
 
+    const buffers = signBuffers({
+      patient_sign,
+      witness_sign,
+      staff_sign,
+      nurse_sign,
+    });
+
     if (patient_contact_existing) {
       await db.PatientContacts.update(
         {
@@ -84,12 +91,11 @@ exports.brachytherapyConsentFormService = async (id, body) => {
       );
     }
 
-    const patient_buffer = base64ToBuffer(patient_sign);
     if (pat_sign_existing) {
       await db.PatSign.update(
         {
           hn: hn,
-          patient_sign: patient_buffer,
+          patient_sign: buffers.patient_sign,
           patient_sign_date,
         },
         { where: { form_id: id }, transaction: t },
@@ -99,19 +105,18 @@ exports.brachytherapyConsentFormService = async (id, body) => {
         {
           form_id: id,
           hn: hn,
-          patient_sign: patient_buffer,
+          patient_sign: buffers.patient_sign,
           patient_sign_date,
         },
         { transaction: t },
       );
     }
 
-    const witness_buffer = base64ToBuffer(witness_sign);
     if (witness_sign_existing) {
       await db.WitnessSign.update(
         {
           witness_name,
-          witness_sign: witness_buffer,
+          witness_sign: buffers.witness_sign,
           witness_sign_date,
         },
         { where: { form_id: id }, transaction: t },
@@ -121,20 +126,19 @@ exports.brachytherapyConsentFormService = async (id, body) => {
         {
           form_id: id,
           witness_name,
-          witness_sign: witness_buffer,
+          witness_sign: buffers.witness_sign,
           witness_sign_date,
         },
         { transaction: t },
       );
     }
 
-    const staff_buffer = base64ToBuffer(staff_sign);
     if (staff_sign_existing) {
       await db.StaffSign.update(
         {
           staff_id,
           staff_position,
-          staff_sign: staff_buffer,
+          staff_sign: buffers.staff_sign,
           staff_sign_date,
         },
         { where: { form_id: id }, transaction: t },
@@ -145,18 +149,18 @@ exports.brachytherapyConsentFormService = async (id, body) => {
           form_id: id,
           staff_id,
           staff_position,
-          staff_sign: staff_buffer,
+          staff_sign: buffers.staff_sign,
           staff_sign_date,
         },
         { transaction: t },
       );
     }
-    const nurse_buffer = base64ToBuffer(nurse_sign);
+
     if (nurse_sign_existing) {
       await db.NurseSign.update(
         {
           nurse_id,
-          nurse_sign: nurse_buffer,
+          nurse_sign: buffers.nurse_sign,
           nurse_sign_date,
         },
         { where: { form_id: id }, transaction: t },
@@ -166,7 +170,7 @@ exports.brachytherapyConsentFormService = async (id, body) => {
         {
           form_id: id,
           nurse_id,
-          nurse_sign: nurse_buffer,
+          nurse_sign: buffers.nurse_sign,
           nurse_sign_date,
         },
         { transaction: t },

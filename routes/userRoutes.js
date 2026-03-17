@@ -25,6 +25,7 @@ router.get("/pat/:value", patController.pat);
 router.get("/pat_visit/:hn", patController.pat_visit_by_hn);
 router.get("/pat_vitalsign/:patvisitid", patController.pat_vitalsign_by_pat_visit);
 router.get("/form-radio-therapy-list", formRadioTherapyController.form_list);
+router.get("/relation", patController.relation);
 
 router.get(
   "/form-radio-therapy-list/:hn",

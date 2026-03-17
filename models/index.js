@@ -143,6 +143,10 @@ db.DoctorSign.belongsTo(db.Form, {
   foreignKey: "form_id",
 });
 
+db.NurseSign.belongsTo(db.Form, {
+  foreignKey: "form_id",
+});
+
 // pat
 
 db.Pat.belongsTo(db.Lookup, {

@@ -2,6 +2,7 @@ const db = require("../models");
 const { sequelize } = db;
 const { Op, Model } = require("sequelize");
 const { emptyToNull } = require("../utils/empty-to-null");
+const { signBuffers } = require("../utils/signatureInputHelper");
 const {
   simulationConsentFormService,
 } = require("../services/simulationConsentFormService");
@@ -126,18 +127,17 @@ exports.crate_form_by_doc = async (req, res) => {
       { transaction: t },
     );
 
-    let buffer_doctor;
+    let buffer;
 
     if (doctor_sign) {
-      const base64 = doctor_sign.replace(/^data:image\/png;base64,/, "");
-      buffer_doctor = Buffer.from(base64, "base64");
+      buffer = signBuffers({ doctor_sign });
     }
 
     const doctor_signs = await db.DoctorSign.create(
       {
         form_id: form.id,
         doctor_id,
-        doctor_sign: buffer_doctor,
+        doctor_sign: buffer.doctor_sign,
         doctor_sign_date,
       },
       { transaction: t },
@@ -313,7 +313,7 @@ exports.show_pat_form_by_form_id = async (req, res) => {
     const doctorsign = {
       doctor_id: doctor_sign.doctor_id,
       doctor_sign_date: doctor_sign.doctor_sign_date,
-      docSign,
+      doctor_sign: docSign,
     };
 
     const result = {

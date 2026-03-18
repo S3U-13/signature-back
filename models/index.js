@@ -16,24 +16,31 @@ db.OptionGroup = require("./option_group");
 db.Option = require("./option");
 
 //form
-db.FormType = require("./form_type");
-db.Form = require("./form");
-db.PatientContacts = require("./patient_contacts");
-db.CongenitalDisease = require("./congenital_disease");
-db.ContrastAllergyStatus = require("./contrast_allergy_status");
-db.ContrastHistoryStatus = require("./contrast_history_status");
-db.DrugAllergyStatus = require("./drug_allergy_status");
-db.SeafoodAllergyStatus = require("./seafood_allergy_status");
-db.PatSign = require("./pat_sign");
-db.WitnessSign = require("./witness_sign");
-db.StaffSign = require("./staff_sign");
-db.DoctorSign = require("./doctor_sign");
-db.NurseSign = require("./nurse_sign");
-
-db.Pat = require("./pat");
-db.PatVisit = require("./pat_visit");
-db.Lookup = require("./lookup");
-db.PatVitalSign = require("./pat_vitalsign");
+db.FormType = require("./radiotherapy_consent_form/form_type");
+db.Form = require("./radiotherapy_consent_form/form");
+db.PatientContacts = require("./radiotherapy_consent_form/patient_contacts");
+db.CongenitalDisease = require("./radiotherapy_consent_form/congenital_disease");
+db.ContrastAllergyStatus = require("./radiotherapy_consent_form/contrast_allergy_status");
+db.ContrastHistoryStatus = require("./radiotherapy_consent_form/contrast_history_status");
+db.DrugAllergyStatus = require("./radiotherapy_consent_form/drug_allergy_status");
+db.SeafoodAllergyStatus = require("./radiotherapy_consent_form/seafood_allergy_status");
+db.PatSign = require("./radiotherapy_consent_form/pat_sign");
+db.WitnessSign = require("./radiotherapy_consent_form/witness_sign");
+db.StaffSign = require("./radiotherapy_consent_form/staff_sign");
+db.DoctorSign = require("./radiotherapy_consent_form/doctor_sign");
+db.NurseSign = require("./radiotherapy_consent_form/nurse_sign");
+//his
+db.Pat = require("./his/pat");
+db.PatVisit = require("./his/pat_visit");
+db.Lookup = require("./his/lookup");
+db.PatVitalSign = require("./his/pat_vitalsign");
+// user_ppk
+db.AppUsername = require("./user_ppk/app_username");
+db.AppUser = require("./user_ppk/app_user");
+db.AppPerson = require("./user_ppk/app_person");
+db.AppGroup = require("./user_ppk/app_group");
+db.AppPosition = require("./user_ppk/app_positions");
+db.AppPersonFunctionalUnit = require("./user_ppk/app_personfunctionalunit");
 
 //associations
 // db.User.belongsTo(db.Role, { foreignKey: "role_id", as: "Role" });
@@ -179,5 +186,22 @@ db.Pat.hasMany(db.PatVisit, { foreignKey: "hn", as: "pat_visit" });
 // 📌 Pat ↔ PatVitalSign (1:N)
 db.Pat.hasMany(db.PatVitalSign, { foreignKey: "hn", as: "pat_vitalsign" });
 db.PatVitalSign.belongsTo(db.Pat, { foreignKey: "hn", as: "pat_vitalsign" });
+
+// ============================== user join =================================//
+
+// user -> username
+db.AppUser.hasOne(db.AppUsername, { foreignKey: "userid", as: "Username" });
+// user -> app_person
+db.AppUser.hasOne(db.AppPerson, { foreignKey: "personid", as: "Person" });
+// app_group -> app_person
+db.AppGroup.hasMany(db.AppPerson, { foreignKey: "GroID" });
+// app_positions -> app_person
+db.AppPosition.hasMany(db.AppPerson, { foreignKey: "PosID" });
+// app_positions -> app_person
+db.AppPersonFunctionalUnit.hasMany(db.AppPerson, { foreignKey: "FuncUnitID" });
+// username -> user
+db.AppUsername.belongsTo(db.AppUser, { foreignKey: "userid" });
+// app_person -> user
+db.AppPerson.belongsTo(db.AppUser, { foreignKey: "personid" });
 
 module.exports = db;

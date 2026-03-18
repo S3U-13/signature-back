@@ -1,19 +1,19 @@
 const { DataTypes } = require("sequelize");
-const sequelize = require("../config/db");
+const sequelize = require("../../config/db");
 
-const StaffSign = sequelize.define(
-  "StaffSign",
+const WitnessSign = sequelize.define(
+  "WitnessSign",
   {
     form_id: DataTypes.INTEGER,
-    staff_id: {
-      type: DataTypes.INTEGER,
+    witness_name: {
+      type: DataTypes.STRING,
       allowNull: true,
     },
-    staff_sign: {
+    witness_sign: {
       type: DataTypes.BLOB,
       allowNull: true,
     },
-    staff_sign_date: {
+    witness_sign_date: {
       type: DataTypes.DATE,
       allowNull: true,
     },
@@ -23,9 +23,9 @@ const StaffSign = sequelize.define(
     },
   },
   {
-    modelName: "StaffSign",
-    tableName: "staff_sign",
+    modelName: "WitnessSign",
+    tableName: "witness_sign",
   },
 );
 
-module.exports = StaffSign;
+module.exports = WitnessSign;

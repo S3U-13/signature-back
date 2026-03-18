@@ -4,7 +4,12 @@ const sequelize = require("../../config/connect_db_ppk");
 const AppPersonFunctionalUnit = sequelize.define(
   "AppPersonFunctionalUnit",
   {
-    FuncunitID: DataTypes.INTEGER,
+    FuncunitID: {
+      primaryKey: true,
+      autoIncrement: true,
+      allowNull: false,
+      type: DataTypes.INTEGER,
+    },
     FuncunitName: DataTypes.STRING,
     TyCode: DataTypes.STRING,
     DepartID: DataTypes.INTEGER,

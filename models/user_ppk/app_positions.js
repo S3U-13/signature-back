@@ -4,7 +4,12 @@ const sequelize = require("../../config/connect_db_ppk");
 const AppPosition = sequelize.define(
   "AppPosition",
   {
-    PositionID: DataTypes.INTEGER,
+    PositionID: {
+      primaryKey: true,
+      autoIncrement: true,
+      allowNull: false,
+      type: DataTypes.INTEGER,
+    },
     Positionname: DataTypes.STRING,
     PosID: DataTypes.INTEGER,
     PPK: DataTypes.INTEGER,

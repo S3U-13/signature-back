@@ -4,7 +4,12 @@ const sequelize = require("../../config/connect_db_ppk");
 const AppUser = sequelize.define(
   "AppUser",
   {
-    userid: DataTypes.INTEGER,
+    userid: {
+      primaryKey: true,
+      autoIncrement: true,
+      allowNull: false,
+      type: DataTypes.INTEGER,
+    },
     blobpsw1: DataTypes.BLOB,
     blobpsw2: DataTypes.BLOB,
     rightlevel: DataTypes.INTEGER,

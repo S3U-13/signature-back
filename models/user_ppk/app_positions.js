@@ -19,6 +19,7 @@ const AppPosition = sequelize.define(
   {
     modelName: "AppPosition",
     tableName: "app_positions",
+    timestamps: false,
   },
 );
 

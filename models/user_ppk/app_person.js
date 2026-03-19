@@ -35,10 +35,10 @@ const AppPerson = sequelize.define(
     EndUser: DataTypes.INTEGER,
     Engprename: DataTypes.STRING,
     Engname: DataTypes.STRING,
-    Engusername: DataTypes.STRING,
+    Engsurname: DataTypes.STRING,
     HN: DataTypes.INTEGER,
   },
-  { modelName: "AppPerson", tableName: "app_person" },
+  { modelName: "AppPerson", tableName: "app_person", timestamps: false },
 );
 
 module.exports = AppPerson;

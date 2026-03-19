@@ -20,7 +20,8 @@ const AppPersonFunctionalUnit = sequelize.define(
   },
   {
     modelName: "AppPersonFunctionalUnit",
-    tableName: "app_personfunctinalunit",
+    tableName: "app_personfunctionalunit",
+    timestamps: false,
   },
 );
 

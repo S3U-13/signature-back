@@ -41,6 +41,8 @@ db.AppPerson = require("./user_ppk/app_person");
 db.AppGroup = require("./user_ppk/app_group");
 db.AppPosition = require("./user_ppk/app_positions");
 db.AppPersonFunctionalUnit = require("./user_ppk/app_personfunctionalunit");
+db.DoctorName = require("./user_ppk/doctor_name");
+db.DoctorFlag = require("./user_ppk/doctor_flag");
 
 //associations
 // db.User.belongsTo(db.Role, { foreignKey: "role_id", as: "Role" });
@@ -192,16 +194,63 @@ db.PatVitalSign.belongsTo(db.Pat, { foreignKey: "hn", as: "pat_vitalsign" });
 // user -> username
 db.AppUser.hasOne(db.AppUsername, { foreignKey: "userid", as: "Username" });
 // user -> app_person
-db.AppUser.hasOne(db.AppPerson, { foreignKey: "personid", as: "Person" });
+db.AppPerson.hasOne(db.AppUser, { foreignKey: "personid" });
 // app_group -> app_person
-db.AppGroup.hasMany(db.AppPerson, { foreignKey: "GroID" });
-// app_positions -> app_person
-db.AppPosition.hasMany(db.AppPerson, { foreignKey: "PosID" });
-// app_positions -> app_person
-db.AppPersonFunctionalUnit.hasMany(db.AppPerson, { foreignKey: "FuncUnitID" });
+// db.AppGroup.hasMany(db.AppPerson, {
+//   foreignKey: "GroID",
+//   as: "Group",
+// });
+
+// // app_positions -> app_person
+// db.AppPosition.hasMany(db.AppPerson, {
+//   foreignKey: "PosID",
+//   as: "Position",
+// });
+
+// // funcunit -> app_person
+// db.AppPersonFunctionalUnit.hasMany(db.AppPerson, {
+//   foreignKey: "FuncUnitID",
+//   as: "Funcunit",
+// });
+
+// // lookup -> app_person
+// db.Lookup.hasMany(db.AppPerson, {
+//   foreignKey: "salutation",
+//   as: "Salutation",
+// });
 // username -> user
 db.AppUsername.belongsTo(db.AppUser, { foreignKey: "userid" });
 // app_person -> user
-db.AppPerson.belongsTo(db.AppUser, { foreignKey: "personid" });
+db.AppUser.belongsTo(db.AppPerson, { foreignKey: "personid", as: "Person" });
+// app_person <-> app_group
+db.AppPerson.belongsTo(db.AppGroup, { foreignKey: "GroID", as: "Group" });
+// app_person <-> app_positions
+db.AppPerson.belongsTo(db.AppPosition, {
+  foreignKey: "PosID",
+  as: "Position",
+  targetKey: "PosID",
+});
+// app_person <-> app_personfuctionalunit
+db.AppPerson.belongsTo(db.AppPersonFunctionalUnit, {
+  foreignKey: "FuncUnitID",
+  as: "Funcunit",
+});
+// app_person <-> lookup
+db.AppPerson.belongsTo(db.Lookup, {
+  foreignKey: "salutation",
+  as: "Salutation",
+});
+
+db.DoctorName.belongsTo(db.DoctorFlag, {
+  foreignKey: "doctorspecialist",
+  as: "Specialist",
+  targetKey: "columnvalue",
+});
+
+db.DoctorName.belongsTo(db.DoctorFlag, {
+  foreignKey: "doctorlevel",
+  as: "Level",
+  targetKey: "columnvalue",
+});
 
 module.exports = db;

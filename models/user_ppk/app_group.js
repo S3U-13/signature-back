@@ -18,6 +18,7 @@ const AppGroup = sequelize.define(
   {
     modelName: "AppGroup",
     tableName: "app_group",
+    timestamps: false,
   },
 );
 

@@ -182,7 +182,9 @@ exports.show_pat_form_by_form_id = async (req, res) => {
           { model: db.FormType, as: "FormTypeName", attributes: ["form_name"] },
         ],
       }),
-      db.PatientContacts.findOne({ where: { form_id: id } }),
+      db.PatientContacts.findOne({
+        where: { form_id: id },
+      }),
       db.CongenitalDisease.findAll({ where: { form_id: id } }),
       db.ContrastHistoryStatus.findOne({ where: { form_id: id } }),
       db.ContrastAllergyStatus.findOne({ where: { form_id: id } }),
@@ -198,6 +200,14 @@ exports.show_pat_form_by_form_id = async (req, res) => {
     if (!form) {
       return res.status(404).json({ message: "Form not found" });
     }
+
+    const relation = await db.Lookup.findOne({
+      where: {
+        lookupid: patient_contacts.relation,
+        lookuptypeid: 19,
+        active: "Y",
+      },
+    });
 
     const now = new Date();
     // const oneYearAgo = new Date();
@@ -316,10 +326,19 @@ exports.show_pat_form_by_form_id = async (req, res) => {
       doctor_sign: docSign,
     };
 
+    const patient_contact = {
+      id: patient_contacts?.id ?? null,
+      form_id: patient_contacts?.form_id ?? null,
+      name: patient_contacts?.name ?? null,
+      relation: patient_contacts?.relation ?? null,
+      relation_name: relation?.lookupname ?? null,
+      flag_status: patient_contacts?.flag_status ?? null,
+    };
+
     const result = {
       data_form: {
         form,
-        patient_contacts,
+        patient_contact,
         congenital_disease,
         contrast_history_status,
         contrast_allergy_status,

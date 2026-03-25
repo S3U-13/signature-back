@@ -1,6 +1,6 @@
 const db = require("../models");
 const { sequelize } = db;
-const { Op, Model } = require("sequelize");
+const { Op, fn, col, where } = require("sequelize");
 const { emptyToNull } = require("../utils/empty-to-null");
 const { signBuffers } = require("../utils/signatureInputHelper");
 const {
@@ -17,33 +17,142 @@ const { signBase64 } = require("../utils/singBase64Service");
 // create function form_list
 exports.form_list = async (req, res) => {
   try {
-    // form_list เพื่อ ค้นหา ข้อมูลทั้ง หมดใน table นั้นมาเเสดง
-    const form_list = await db.Form.findAll({
-      // attributes: ["id", "form_type_id", "hn", "createdAt",],
-      include: [
-        { model: db.FormType, as: "FormTypeName", attributes: ["form_name"] },
-      ],
-    });
+    const { search } = req.query;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const offset = (page - 1) * limit;
+    const { sortField = "createdAt", sortOrder = "desc" } = req.query;
+    const { status } = req.query;
 
-    const data_form_list = [];
-    for (const item of form_list || []) {
-      const pat = await db.Pat.findOne({
-        where: { hn: item.hn },
+    let hnList = [];
+
+    const isNumber = /^[0-9]+$/.test(search);
+
+    // 🔍 ค้นหา HN จาก Pat
+    if (search && search.length >= 2) {
+      const pats = await db.Pat.findAll({
+        attributes: ["hn"],
+        limit,
+        where: isNumber
+          ? { hn: { [Op.like]: `${search}%` } }
+          : {
+              [Op.or]: [
+                where(fn("LOWER", col("firstname")), {
+                  [Op.like]: `${search}%`,
+                }),
+                where(fn("LOWER", col("lastname")), {
+                  [Op.like]: `${search}%`,
+                }),
+                where(
+                  fn(
+                    "LOWER",
+                    fn(
+                      "concat",
+                      col("prename"),
+                      col("firstname"),
+                      " ",
+                      col("lastname"),
+                    ),
+                  ),
+                  {
+                    [Op.like]: `%${search}%`,
+                  },
+                ),
+              ],
+            },
       });
 
-      data_form_list.push({
+      hnList = pats.map((p) => p.hn);
+
+      // ❌ ไม่เจอ → return เลย
+      if (hnList.length === 0) {
+        return res.json({
+          data: [],
+          pagination: { total: 0, page, limit, totalPages: 0 },
+        });
+      }
+    }
+
+    const whereCondition = {};
+
+    if (search && hnList.length > 0) {
+      whereCondition.hn = { [Op.in]: hnList };
+    }
+    if (status) {
+      whereCondition.form_status = status;
+    }
+
+    // 📄 ดึง Form
+    const { rows: form_list = [], count: total = 0 } =
+      await db.Form.findAndCountAll({
+        where: whereCondition,
+        limit,
+        offset,
+        include: [
+          {
+            model: db.FormType,
+            as: "FormTypeName",
+            attributes: ["form_name"],
+          },
+        ],
+        order: [[sortField, sortOrder]],
+      });
+
+    // 📌 ดึง HN จาก form
+    const hnFromForm = form_list.map((item) => item.hn);
+
+    // 🔥 FIX สำคัญ (ต้องใช้ Op.in)
+    const pats = await db.Pat.findAll({
+      where: {
+        hn: {
+          [Op.in]: hnFromForm,
+        },
+      },
+    });
+
+    // 📦 map pat
+    const patMap = {};
+    for (const p of pats) {
+      patMap[p.hn] = p;
+    }
+
+    // 📤 format response
+    const data_form_list = form_list.map((item) => {
+      const pat = patMap[item.hn];
+
+      const isNew = new Date(item.createdAt) > Date.now() - 5 * 60 * 1000; // 5 นาทีล่าสุด
+
+      const isUpdated =
+        item.updatedAt &&
+        item.updatedAt !== item.updatedAt &&
+        new Date(item.updatedAt) > Date.now() - 5 * 60 * 1000;
+
+      return {
         id: item.id ?? null,
         hn: item.hn ?? null,
         name: pat ? `${pat.prename}${pat.firstname} ${pat.lastname}` : null,
-        form_type: item.FormTypeName ? item.FormTypeName.form_name : null,
+        form_type: item.FormTypeName?.form_name ?? null,
         status: item.form_status ?? null,
         form_type_id: item.form_type_id ?? null,
-      });
-    }
+        createdAt: item.createdAt ?? null,
+        // 🔥 เพิ่มตรงนี้
+        isNew,
+        isUpdated,
+      };
+    });
 
-    return res.json(data_form_list);
+    return res.json({
+      data: data_form_list,
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+        from: total === 0 ? 0 : (page - 1) * limit + 1,
+        to: Math.min(page * limit, total),
+      },
+    });
   } catch (error) {
-    // message error
     console.error("FORM_LIST_ERROR:", error);
     return res.status(500).json({
       message: "Something went wrong!",
@@ -127,7 +236,7 @@ exports.crate_form_by_doc = async (req, res) => {
       { transaction: t },
     );
 
-    let buffer;
+    let buffer = {};
 
     if (doctor_sign) {
       buffer = signBuffers({ doctor_sign });

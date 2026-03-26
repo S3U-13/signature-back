@@ -1,4 +1,4 @@
-// hash 
+// hash
 const bcrypt = require("bcryptjs");
 
 async function hashPassword(password) {

@@ -29,19 +29,21 @@ exports.form_list = async (req, res) => {
     const isNumber = /^[0-9]+$/.test(search);
 
     // 🔍 ค้นหา HN จาก Pat
-    if (search && search.length >= 2) {
+    if (search) {
+      const keyword = search.toLowerCase();
+
       const pats = await db.Pat.findAll({
         attributes: ["hn"],
         limit,
         where: isNumber
-          ? { hn: { [Op.like]: `${search}%` } }
+          ? { hn: { [Op.like]: `%${keyword}%` } }
           : {
               [Op.or]: [
                 where(fn("LOWER", col("firstname")), {
-                  [Op.like]: `${search}%`,
+                  [Op.like]: `%${keyword}%`,
                 }),
                 where(fn("LOWER", col("lastname")), {
-                  [Op.like]: `${search}%`,
+                  [Op.like]: `%${keyword}%`,
                 }),
                 where(
                   fn(
@@ -55,7 +57,7 @@ exports.form_list = async (req, res) => {
                     ),
                   ),
                   {
-                    [Op.like]: `%${search}%`,
+                    [Op.like]: `%${keyword}%`,
                   },
                 ),
               ],
@@ -68,7 +70,7 @@ exports.form_list = async (req, res) => {
       if (hnList.length === 0) {
         return res.json({
           data: [],
-          pagination: { total: 0, page, limit, totalPages: 0 },
+          pagination: { total: 0, page, limit, totalPages: 0, from: 0, to: 0 },
         });
       }
     }
@@ -124,7 +126,7 @@ exports.form_list = async (req, res) => {
 
       const isUpdated =
         item.updatedAt &&
-        item.updatedAt !== item.updatedAt &&
+        item.createdAt !== item.updatedAt &&
         new Date(item.updatedAt) > Date.now() - 5 * 60 * 1000;
 
       return {
@@ -186,6 +188,7 @@ exports.search_hn_form_list = async (req, res) => {
         form_type: item.FormTypeName ? item.FormTypeName.form_name : null,
         status: item.form_status,
         form_type_id: item.form_type_id,
+        createdAt: item.createdAt ?? null,
       });
     }
 
@@ -310,13 +313,17 @@ exports.show_pat_form_by_form_id = async (req, res) => {
       return res.status(404).json({ message: "Form not found" });
     }
 
-    const relation = await db.Lookup.findOne({
-      where: {
-        lookupid: patient_contacts.relation,
-        lookuptypeid: 19,
-        active: "Y",
-      },
-    });
+    let relation = null;
+
+    if (patient_contacts?.relation) {
+      relation = await db.Lookup.findOne({
+        where: {
+          lookupid: patient_contacts.relation,
+          lookuptypeid: 19,
+          active: "Y",
+        },
+      });
+    }
 
     const now = new Date();
     // const oneYearAgo = new Date();
@@ -446,20 +453,24 @@ exports.show_pat_form_by_form_id = async (req, res) => {
 
     const result = {
       data_form: {
-        form,
-        patient_contact,
-        congenital_disease,
-        contrast_history_status,
-        contrast_allergy_status,
-        seafood_allergy_status,
-        drug_allergy_status,
-        patientsign,
-        witnesssign,
-        staffsign,
-        nursesign,
-        doctorsign,
+        form: form ?? {},
+        patient_contact: patient_contact ?? {},
+        congenital_disease: congenital_disease ?? [],
+        contrast_history_status: contrast_history_status ?? {},
+        contrast_allergy_status: contrast_allergy_status ?? {},
+        seafood_allergy_status: seafood_allergy_status ?? {},
+        drug_allergy_status: drug_allergy_status ?? {},
+        patientsign: patientsign ?? null,
+        witnesssign: witnesssign ?? null,
+        staffsign: staffsign ?? null,
+        nursesign: nursesign ?? null,
+        doctorsign: doctorsign ?? null,
       },
-      data_pat: { pat, pat_visit, pat_vitalsign },
+      data_pat: {
+        pat: pat ?? {},
+        pat_visit: pat_visit ?? {},
+        pat_vitalsign: pat_vitalsign ?? {},
+      },
     };
 
     return res.status(200).json(result);

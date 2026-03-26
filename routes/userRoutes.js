@@ -53,4 +53,6 @@ router.put(
 
 router.get("/user-ppk-by-username/:user_name", userController.user_ppk);
 
+router.post("/user-ppk-register", userController.register_by_cid);
+
 module.exports = router;

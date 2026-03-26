@@ -1,98 +1,255 @@
-// const db = require("../models");
-// const bcrypt = require("bcryptjs");
-// const jwt = require("jsonwebtoken");
+const db = require("../models");
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
 // const { logAction } = require("../services/logService");
 
-// exports.login = async (req, res) => {
-//   try {
-//     const { user_name, password } = req.body;
+exports.login = async (req, res) => {
+  try {
+    const { username, password } = req.body;
 
-//     const user = await db.User.findOne({
-//       where: { user_name },
-//       include: [
-//         { model: db.Role, as: "Role", attributes: ["role_name"] },
-//         { model: db.Position, as: "Position", attributes: ["position_name"] },
-//       ],
-//     });
-//     if (!user) return res.status(404).json({ error: "User not found" });
+    const user = await db.Username.findOne({
+      where: { username },
+    });
 
-//     const match = await bcrypt.compare(password, user.password);
-//     if (!match) return res.status(401).json({ error: "Invalid password" });
+    const app_username = await db.AppUsername.findOne({
+      where: { username: user.username },
+    });
 
-//     const token = jwt.sign(
-//       {
-//         id: user.id,
-//         role_id: user.role_id,
-//       },
-//       process.env.JWT_SECRET || "secretkey",
-//       { expiresIn: process.env.JWT_EXPIRES_IN }
-//     );
+    if (!app_username) {
+      return res.status(404).json({ message: "ไม่เจอ username" });
+    }
 
-//     // บันทึก log
-//     await logAction({
-//       userId: user.id,
-//       action: "login",
-//       entity: "Auth",
-//       entityId: user.id,
-//       description: "ผู้ใช้เข้าสู่ระบบ",
-//       req,
-//     });
+    const app_user = await db.AppUser.findOne({
+      where: { userid: app_username.userid },
+    });
 
-//     res.json({
-//       message: "Login success",
-//       token,
-//       user: {
-//         id: user.id,
-//         name: user.name,
-//         role_id: user.role_id,
-//         position_id: user.position_id,
-//         position_name: user.Position?.position_name || null,
-//       },
-//     });
-//   } catch (err) {
-//     console.error(err);
-//     res.status(500).json({ error: "Something went wrong or Server error" });
-//   }
-// };
+    if (!app_user) {
+      return res.status(404).json({ message: "ไม่เจอ app_user" });
+    }
 
-// exports.logout = async (req, res) => {
-//   try {
-//     console.log("🟢 Logout request received");
+    const app_person = await db.AppPerson.findOne({
+      where: { id: app_user.personid },
+      include: [
+        { model: db.Lookup, as: "Salutation", where: { lookuptypeid: 17 } },
+        { model: db.AppGroup, as: "Group" },
+        { model: db.AppPosition, as: "Position" },
+        { model: db.PersonalOfficeGroup, as: "Office" },
+        { model: db.AppPersonFunctionalUnit, as: "Funcunit" },
+      ],
+    });
 
-//     if (req.user) {
-//       console.log("👤 Logout user:", req.user.id);
+    let doctor_data = null;
+    let role = null;
+    if ([61502, 61523, 61525].includes(app_person?.PosID)) {
+      role = "nurse";
+    } else if ([60104, 60204, 60501, 82923].includes(app_person?.PosID)) {
+      doctor_data = await db.DoctorName.findOne({
+        where: { personid: app_person.id },
+        include: [
+          {
+            model: db.DoctorFlag,
+            as: "Specialist",
+            where: { columnname: "doctorspecialist" },
+          },
+          {
+            model: db.DoctorFlag,
+            as: "Level",
+            where: { columnname: "doctorlevel" },
+          },
+        ],
+      });
+      role = "doctor";
+    } else {
+      role = "staff";
+    }
 
-//       await logAction({
-//         userId: req.user.id,
-//         action: "logout",
-//         entity: "Auth",
-//         entityId: req.user.id,
-//         description: "ผู้ใช้ออกจากระบบ",
-//         req,
-//       });
-//     } else {
-//       console.log(
-//         "⚠️ req.user ไม่มีค่า (token อาจไม่ถูกส่งหรือ decode ไม่ได้)"
-//       );
-//     }
+    const user_data = {
+      userid: app_username?.userid ?? null,
+      username: app_username?.username ?? null,
+      role,
+    };
+    if (!user) return res.status(404).json({ error: "User not found" });
 
-//     res.json({ message: "Logout success" });
-//   } catch (err) {
-//     console.error("❌ Logout error:", err);
-//     res.status(500).json({ error: "Something went wrong" });
-//   }
-// };
+    const match = await bcrypt.compare(password, user.password1);
+    if (!match) return res.status(401).json({ error: "Invalid password" });
 
-// exports.checkToken = (req, res) => {
-//   const token = req.headers.authorization?.split(" ")[1];
-//   if (!token) return res.status(401).json({ valid: false });
+    const token = jwt.sign(
+      {
+        id: user.id,
+        username: user.username,
+        role: user_data.role,
+      },
+      process.env.JWT_SECRET || "secretkey",
+      { expiresIn: process.env.JWT_EXPIRES_IN },
+    );
 
-//   jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
-//     if (err) {
-//       // token หมดอายุหรือไม่ถูกต้อง
-//       return res.status(401).json({ valid: false, error: err.message });
-//     }
-//     // token valid
-//     res.json({ valid: true, user: decoded });
-//   });
-// };
+    res.cookie("access_token", token, {
+      httpOnly: true,
+      sameSite: "lax",
+      path: "/",
+      maxAge: 12 * 60 * 60 * 1000,
+      // secure: true, // เปิดเมื่อใช้ https
+    });
+
+    // บันทึก log
+    // await logAction({
+    //   userId: user.id,
+    //   action: "login",
+    //   entity: "Auth",
+    //   entityId: user.id,
+    //   description: "ผู้ใช้เข้าสู่ระบบ",
+    //   req,
+    // });
+
+    res.json({
+      message: "Login success",
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Something went wrong or Server error" });
+  }
+};
+
+exports.logout = async (req, res) => {
+  res.clearCookie("access_token", {
+    httpOnly: true,
+    sameSite: "lax",
+    path: "/",
+  });
+
+  res.json({ message: "Logged out" });
+};
+
+exports.me = async (req, res) => {
+  try {
+    const token = req.cookies?.access_token; // 👈 เปลี่ยนตรงนี้
+
+    console.log(token);
+    if (!token) {
+      return res.status(401).json({ message: "No token" });
+    }
+
+    // 🔥 decode token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || "secretkey");
+
+    const user = await db.Username.findOne({
+      where: { id: decoded.id },
+    });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const app_username = await db.AppUsername.findOne({
+      where: { username: user.username },
+    });
+
+    if (!app_username) {
+      return res.status(404).json({ message: "ไม่เจอ username" });
+    }
+
+    const app_user = await db.AppUser.findOne({
+      where: { userid: app_username.userid },
+    });
+
+    if (!app_user) {
+      return res.status(404).json({ message: "ไม่เจอ app_user" });
+    }
+
+    const app_person = await db.AppPerson.findOne({
+      where: { id: app_user.personid },
+      include: [
+        { model: db.Lookup, as: "Salutation", required: false },
+        { model: db.AppGroup, as: "Group", required: false },
+        { model: db.AppPosition, as: "Position", required: false },
+        { model: db.PersonalOfficeGroup, as: "Office", required: false },
+        { model: db.AppPersonFunctionalUnit, as: "Funcunit", required: false },
+      ],
+    });
+
+    if (!app_person) {
+      return res.status(404).json({ message: "ไม่เจอ person" });
+    }
+
+    // 🔥 role
+    let doctor_data = null;
+    let role = "staff";
+
+    if ([61502, 61523, 61525].includes(app_person.PosID)) {
+      role = "nurse";
+    } else if ([60104, 60204, 60501, 82923].includes(app_person.PosID)) {
+      doctor_data = await db.DoctorName.findOne({
+        where: { personid: app_person.id },
+        include: [
+          {
+            model: db.DoctorFlag,
+            as: "Specialist",
+            where: { columnname: "doctorspecialist" },
+            required: false,
+          },
+          {
+            model: db.DoctorFlag,
+            as: "Level",
+            where: { columnname: "doctorlevel" },
+            required: false,
+          },
+        ],
+      });
+      role = "doctor";
+    }
+
+    const name = doctor_data
+      ? `${doctor_data?.doctorsalutation}${doctor_data?.doctorname} ${doctor_data?.doctorlastname}`
+      : `${app_person?.Salutation?.lookupname}${app_person?.firstname} ${app_person?.lastname}`;
+
+    const sex_doctor = doctor_data?.sex === "F" ? "หญิง" : "ชาย";
+
+    const specialist = doctor_data ? doctor_data?.Specialist.descvalue : "";
+    const level = doctor_data ? doctor_data?.Level.descvalue : "";
+    const doctor_license = doctor_data ? doctor_data?.doctorlicenseid : "";
+
+    const sex = doctor_data ? sex_doctor : app_person?.Sex;
+
+    const user_data = {
+      userid: app_username?.userid ?? null,
+      username: app_username?.username ?? null,
+      person_name: name,
+      sex,
+      doctor_license,
+      GroID: app_person?.GroID ?? null,
+      group: app_person?.Group?.groupname ?? null,
+      PosID: app_person?.PosID ?? null,
+      position: app_person?.Position?.Positionname ?? null,
+      OffID: app_person?.OffID ?? null,
+      office: app_person?.Office?.offname ?? null,
+      FuncunitID: app_person?.FuncUnitID ?? null,
+      func_unit: app_person?.Funcunit?.FuncunitName ?? null,
+      role,
+      specialist,
+      level,
+      birthday: app_person?.Birthday ?? null,
+    };
+
+    return res.json({
+      message: "success",
+      user_data,
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(401).json({ message: "Invalid token" });
+  }
+};
+
+exports.checkToken = (req, res) => {
+  const token = req.cookies?.access_token; // 👈 เปลี่ยนตรงนี้
+  if (!token) return res.status(401).json({ valid: false });
+
+  jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+    if (err) {
+      // token หมดอายุหรือไม่ถูกต้อง
+      return res.status(401).json({ valid: false, error: err.message });
+    }
+    // token valid
+    res.json({ valid: true, user: decoded });
+  });
+};

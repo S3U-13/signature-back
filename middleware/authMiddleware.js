@@ -1,32 +1,49 @@
-// middleware/authMiddleware.js
 const jwt = require("jsonwebtoken");
 
-// ตรวจสอบ token
+// 🔐 ตรวจสอบ token
 function authenticateToken(req, res, next) {
+  let token = null;
+
   const authHeader = req.headers["authorization"];
-  const token = authHeader && authHeader.split(" ")[1]; // Bearer TOKEN
 
-  if (!token) return res.status(401).json({ error: "No token provided" });
+  // 👉 header
+  if (authHeader && authHeader.startsWith("Bearer ")) {
+    token = authHeader.split(" ")[1];
+  }
 
-  jwt.verify(token, process.env.JWT_SECRET || "secretkey", (err, user) => {
-    if (err) {
-      if (err.name === "TokenExpiredError") {
-        return res.status(403).json({ error: "Token expired" });
-      } else {
-        return res.status(403).json({ error: "Invalid token" });
-      }
-    }
+  // 👉 cookie
+  if (!token && req.cookies) {
+    token = req.cookies.access_token;
+  }
 
-    req.user = user; // { id, role_id }
+  if (!token) {
+    return res.status(401).json({ error: "No token provided" });
+  }
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || "secretkey");
+
+    req.user = decoded;
     next();
-  });
+  } catch (err) {
+    if (err.name === "TokenExpiredError") {
+      return res.status(403).json({ error: "Token expired" });
+    }
+    return res.status(403).json({ error: "Invalid token" });
+  }
 }
 
-// ตรวจสอบ role
-function authorizeRole(role) {
+// 🔑 ตรวจสอบ role
+function authorizeRole(...roles) {
   return (req, res, next) => {
-    if (req.user.role_id !== role)
+    if (!req.user) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    if (!roles.includes(req.user.role)) {
       return res.status(403).json({ error: "Access denied" });
+    }
+
     next();
   };
 }

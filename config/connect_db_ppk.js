@@ -10,7 +10,7 @@ const sequelize = new Sequelize(
     host: process.env.DBPPK_HOST, // 127.0.0.1
     dialect: process.env.DBPPK_DIALECT, // mysql
     port: process.env.PORTPPK || 3306,
-    logging: true, // ปิด log query
+    logging:  console.log, // ปิด log query
   },
 );
 

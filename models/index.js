@@ -42,7 +42,12 @@ db.AppGroup = require("./user_ppk/app_group");
 db.AppPosition = require("./user_ppk/app_positions");
 db.AppPersonFunctionalUnit = require("./user_ppk/app_personfunctionalunit");
 db.DoctorName = require("./user_ppk/doctor_name");
+db.DoctorUser = require("./user_ppk/doctor_user");
 db.DoctorFlag = require("./user_ppk/doctor_flag");
+db.PersonalOfficeGroup = require("./user_ppk/personal_officegroup");
+//user
+db.Username = require("./user/user_name");
+db.UserSign = require("./user/user_sign");
 
 //associations
 // db.User.belongsTo(db.Role, { foreignKey: "role_id", as: "Role" });
@@ -229,6 +234,11 @@ db.AppPerson.belongsTo(db.AppPosition, {
   foreignKey: "PosID",
   as: "Position",
   targetKey: "PosID",
+});
+db.AppPerson.belongsTo(db.PersonalOfficeGroup, {
+  foreignKey: "OffID",
+  as: "Office",
+  targetKey: "offid",
 });
 // app_person <-> app_personfuctionalunit
 db.AppPerson.belongsTo(db.AppPersonFunctionalUnit, {

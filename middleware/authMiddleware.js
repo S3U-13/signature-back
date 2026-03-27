@@ -7,7 +7,7 @@ function authenticateToken(req, res, next) {
   const authHeader = req.headers["authorization"];
 
   // 👉 header
-  if (authHeader && authHeader.startsWith("Bearer ")) {
+  if (authHeader && authHeader.startsWith("Bearer")) {
     token = authHeader.split(" ")[1];
   }
 

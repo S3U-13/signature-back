@@ -76,6 +76,7 @@ exports.login = async (req, res) => {
     const token = jwt.sign(
       {
         id: user.id,
+        userid: user.userid,
         username: user.username,
         role: user_data.role,
       },
@@ -124,7 +125,6 @@ exports.me = async (req, res) => {
   try {
     const token = req.cookies?.access_token; // 👈 เปลี่ยนตรงนี้
 
-    console.log(token);
     if (!token) {
       return res.status(401).json({ message: "No token" });
     }

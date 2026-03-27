@@ -202,7 +202,7 @@ exports.search_hn_form_list = async (req, res) => {
 // create create_form_by_doc
 exports.crate_form_by_doc = async (req, res) => {
   const t = await sequelize.transaction();
-
+  const userId = req.user.userid;
   try {
     const cleanedBody = emptyToNull(req.body);
 
@@ -214,7 +214,6 @@ exports.crate_form_by_doc = async (req, res) => {
       disease,
       lmp,
       consent,
-      doctor_id,
       doctor_sign,
       doctor_sign_date,
     } = cleanedBody;
@@ -235,6 +234,7 @@ exports.crate_form_by_doc = async (req, res) => {
         disease,
         lmp,
         consent,
+        doctor_id: userId,
       },
       { transaction: t },
     );
@@ -248,7 +248,7 @@ exports.crate_form_by_doc = async (req, res) => {
     const doctor_signs = await db.DoctorSign.create(
       {
         form_id: form.id,
-        doctor_id,
+        doctor_id: userId,
         doctor_sign: buffer.doctor_sign,
         doctor_sign_date,
       },

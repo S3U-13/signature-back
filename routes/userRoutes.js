@@ -7,13 +7,14 @@ const formRadioTherapyController = require("../controllers/formRadioTherapyContr
 const userController = require("../controllers/userController");
 
 // const apiLogger = require("../middleware/apiLogger");
-// const {
-//   authenticateToken,
-//   authorizeRole,
-// } = require("../middleware/authMiddleware");
+const {
+  authenticateToken,
+  authorizeRole,
+} = require("../middleware/authMiddleware");
 
 // //route
 // router.use(authenticateToken, apiLogger, authorizeRole(1));
+router.use(authenticateToken, authorizeRole("doctor", "nurse", "staff"));
 
 // router.get("/mapAll", AllChoiceController.mapAll);
 

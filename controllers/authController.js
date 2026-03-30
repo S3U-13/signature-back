@@ -1,7 +1,71 @@
 const db = require("../models");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const hashPassword = require("../utils/hashPassword");
+require("dotenv").config();
+const defaultPassword = process.env.DEFAULT_PASSWORD;
 // const { logAction } = require("../services/logService");
+
+exports.register_by_cid = async (req, res) => {
+  try {
+    const { cid } = req.body;
+
+    const requiredFields = ["cid"];
+    for (const field of requiredFields) {
+      if (!req.body[field]) {
+        return res.status(400).json({ error: `${field} is required` });
+      }
+    }
+    const app_person = await db.AppPerson.findOne({
+      attributes: ["id", "CITIZEN"],
+      where: {
+        CITIZEN: cid,
+      },
+    });
+
+    if (!app_person) {
+      return res
+        .status(404)
+        .json({ message: "Not found Person กรุณาติดต่อเจ้าหน้าที่ !!" });
+    }
+
+    const app_user = app_person.id
+      ? await db.AppUser.findOne({
+          attributes: ["userid", "personid"],
+          where: { personid: app_person.id },
+        })
+      : null;
+
+    if (!app_user) {
+      return res
+        .status(404)
+        .json({ message: "ไม่พบ username กรุณาติดต่อเจ้าหน้าที่ !!" });
+    }
+
+    const app_username = app_user.userid
+      ? await db.AppUsername.findOne({
+          attributes: ["username", "userid"],
+          where: {
+            userid: app_user.userid,
+          },
+        })
+      : null;
+
+    if (app_username && app_username.username) {
+      const hashedPassword = await hashPassword(defaultPassword);
+      await db.Username.create({
+        userid: app_username.userid,
+        username: app_username.username,
+        password1: hashedPassword,
+        password2: hashedPassword,
+      });
+    }
+    return res.status(200).json({ message: "User ppk is activated" });
+  } catch (error) {
+    console.log(error); // 👈 สำคัญ
+    return res.status(500).json({ message: error.message });
+  }
+};
 
 exports.login = async (req, res) => {
   try {
@@ -159,7 +223,12 @@ exports.me = async (req, res) => {
     const app_person = await db.AppPerson.findOne({
       where: { id: app_user.personid },
       include: [
-        { model: db.Lookup, as: "Salutation", required: false },
+        {
+          model: db.Lookup,
+          as: "Salutation",
+          required: false,
+          where: { lookuptypeid: 17 },
+        },
         { model: db.AppGroup, as: "Group", required: false },
         { model: db.AppPosition, as: "Position", required: false },
         { model: db.PersonalOfficeGroup, as: "Office", required: false },

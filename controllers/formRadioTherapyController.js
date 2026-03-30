@@ -272,6 +272,7 @@ exports.crate_form_by_doc = async (req, res) => {
 };
 
 exports.show_pat_form_by_form_id = async (req, res) => {
+  const cookie = req.headers.cookie;
   const { id } = req.params;
   try {
     const [
@@ -385,6 +386,11 @@ exports.show_pat_form_by_form_id = async (req, res) => {
       }),
     ]);
 
+    const doctor_user = await fetch(
+      `${process.env.API_URL}/user/user-ppk-by-userid/${doctor_sign?.doctor_id}`,
+      { headers: { Cookie: cookie } },
+    ).then((res) => res.json());
+
     //patient_sign
     let PatientSign = null;
 
@@ -465,6 +471,7 @@ exports.show_pat_form_by_form_id = async (req, res) => {
         staffsign: staffsign ?? null,
         nursesign: nursesign ?? null,
         doctorsign: doctorsign ?? null,
+        doctor_user: doctor_user ?? null,
       },
       data_pat: {
         pat: pat ?? {},

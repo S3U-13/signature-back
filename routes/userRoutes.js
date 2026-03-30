@@ -52,8 +52,6 @@ router.put(
   formRadioTherapyController.edit_form,
 );
 
-router.get("/user-ppk-by-username/:user_name", userController.user_ppk);
-
-router.post("/user-ppk-register", userController.register_by_cid);
+router.get("/user-ppk-by-userid/:userid", userController.user_ppk);
 
 module.exports = router;

@@ -387,7 +387,7 @@ exports.show_pat_form_by_form_id = async (req, res) => {
     ]);
 
     const doctor_user = await fetch(
-      `${process.env.API_URL}/user/user-ppk-by-userid/${doctor_sign?.doctor_id}`,
+      `${process.env.API_URL}user/user-ppk-by-userid/${doctor_sign?.doctor_id}`,
       { headers: { Cookie: cookie } },
     ).then((res) => res.json());
 
@@ -446,6 +446,7 @@ exports.show_pat_form_by_form_id = async (req, res) => {
       doctor_id: doctor_sign.doctor_id,
       doctor_sign_date: doctor_sign.doctor_sign_date,
       doctor_sign: docSign,
+      doctor_name: doctor_user?.user_data?.person_name ?? null,
     };
 
     const patient_contact = {

@@ -5,6 +5,7 @@ const choiceController = require("../controllers/choiceController");
 const patController = require("../controllers/patController");
 const formRadioTherapyController = require("../controllers/formRadioTherapyController");
 const userController = require("../controllers/userController");
+const manageStaffController = require("../controllers/manageStaffController");
 
 // const apiLogger = require("../middleware/apiLogger");
 const {
@@ -25,10 +26,12 @@ router.get("/prename", patController.prename);
 
 router.get("/pat/:value", patController.pat);
 router.get("/pat_visit/:hn", patController.pat_visit_by_hn);
+
 router.get(
   "/pat_vitalsign/:patvisitid",
   patController.pat_vitalsign_by_pat_visit,
 );
+
 router.get("/form-radio-therapy-list", formRadioTherapyController.form_list);
 router.get("/relation", patController.relation);
 
@@ -52,6 +55,26 @@ router.put(
   formRadioTherapyController.edit_form,
 );
 
+//user
+
 router.get("/user-ppk-by-userid/:userid", userController.user_ppk);
+
+router.get(
+  "/doctors/group-radio-therapy",
+  userController.doctors_by_group_radio_therapy,
+);
+
+router.get(
+  "/user-ppk-group-by-radio-therapy",
+  userController.user_ppk_group_by_radio_therapy,
+);
+
+// manage staff
+router.get("/manage-staff-index", manageStaffController.getManageStaff);
+router.get("/get-user-manage-staff", userController.get_user);
+router.put(
+  "/add-or-delete-manage-staff",
+  manageStaffController.addOrDeleteManageStaff,
+);
 
 module.exports = router;

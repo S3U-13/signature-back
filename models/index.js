@@ -29,11 +29,15 @@ db.WitnessSign = require("./radiotherapy_consent_form/witness_sign");
 db.StaffSign = require("./radiotherapy_consent_form/staff_sign");
 db.DoctorSign = require("./radiotherapy_consent_form/doctor_sign");
 db.NurseSign = require("./radiotherapy_consent_form/nurse_sign");
+//manage staff
+db.ManageStaff = require("./radiotherapy_consent_form/manage_staff");
 //his
 db.Pat = require("./his/pat");
 db.PatVisit = require("./his/pat_visit");
 db.Lookup = require("./his/lookup");
 db.PatVitalSign = require("./his/pat_vitalsign");
+// location ppk
+db.Location = require("./location_ppk/location");
 // user_ppk
 db.AppUsername = require("./user_ppk/app_username");
 db.AppUser = require("./user_ppk/app_user");
@@ -41,10 +45,13 @@ db.AppPerson = require("./user_ppk/app_person");
 db.AppGroup = require("./user_ppk/app_group");
 db.AppPosition = require("./user_ppk/app_positions");
 db.AppPersonFunctionalUnit = require("./user_ppk/app_personfunctionalunit");
+db.DoctorLocation = require("./user_ppk/doctor_location");
 db.DoctorName = require("./user_ppk/doctor_name");
 db.DoctorUser = require("./user_ppk/doctor_user");
 db.DoctorFlag = require("./user_ppk/doctor_flag");
 db.PersonalOfficeGroup = require("./user_ppk/personal_officegroup");
+db.AppDataGroup = require("./user_ppk/app_usergroup");
+db.AppDataSetGroup = require("./user_ppk/app_datasetgroup");
 //user
 db.Username = require("./user/user_name");
 db.UserSign = require("./user/user_sign");
@@ -261,6 +268,26 @@ db.DoctorName.belongsTo(db.DoctorFlag, {
   foreignKey: "doctorlevel",
   as: "Level",
   targetKey: "columnvalue",
+});
+
+db.DoctorLocation.belongsTo(db.DoctorName, {
+  foreignKey: "doctorid",
+  as: "Doctor",
+});
+
+db.AppDataGroup.hasMany(db.AppDataSetGroup, {
+  foreignKey: "groupid",
+  as: "SetGroup",
+});
+
+db.AppDataSetGroup.belongsTo(db.AppDataGroup, {
+  foreignKey: "groupid",
+  as: "SetGroup",
+});
+
+db.AppDataSetGroup.belongsTo(db.Location, {
+  foreignKey: "referenceid",
+  as: "LocationSetGroup",
 });
 
 module.exports = db;

@@ -55,8 +55,11 @@ db.AppDataSetGroup = require("./user_ppk/app_datasetgroup");
 //user
 db.Username = require("./user/user_name");
 db.UserSign = require("./user/user_sign");
+db.UserSignData = require("./user/user_sign_data");
+db.DoctorImage = require("./user/doctor_image");
+db.DoctorImageData = require("./user/doctor_imagedata");
 
-//associations
+// associations
 // db.User.belongsTo(db.Role, { foreignKey: "role_id", as: "Role" });
 // db.User.belongsTo(db.Position, { foreignKey: "position_id", as: "Position" });
 
@@ -288,6 +291,17 @@ db.AppDataSetGroup.belongsTo(db.AppDataGroup, {
 db.AppDataSetGroup.belongsTo(db.Location, {
   foreignKey: "referenceid",
   as: "LocationSetGroup",
+});
+
+// create signature
+db.UserSignData.belongsTo(db.UserSign, {
+  foreignKey: "id",
+  as: "SignData",
+});
+
+db.DoctorImageData.belongsTo(db.DoctorImage, {
+  foreignKey: "id",
+  as: "DoctorSignData",
 });
 
 module.exports = db;

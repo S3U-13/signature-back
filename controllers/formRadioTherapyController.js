@@ -17,69 +17,14 @@ const { signBase64 } = require("../utils/singBase64Service");
 // create function form_list
 exports.form_list = async (req, res) => {
   try {
-    const { search } = req.query;
+    const { search, status } = req.query;
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const offset = (page - 1) * limit;
     const { sortField = "createdAt", sortOrder = "desc" } = req.query;
-    const { status } = req.query;
 
-    let hnList = [];
-
-    const isNumber = /^[0-9]+$/.test(search);
-
-    // 🔍 ค้นหา HN จาก Pat
-    if (search) {
-      const keyword = search.toLowerCase();
-
-      const pats = await db.Pat.findAll({
-        attributes: ["hn"],
-        limit,
-        where: isNumber
-          ? { hn: { [Op.like]: `%${keyword}%` } }
-          : {
-              [Op.or]: [
-                where(fn("LOWER", col("firstname")), {
-                  [Op.like]: `%${keyword}%`,
-                }),
-                where(fn("LOWER", col("lastname")), {
-                  [Op.like]: `%${keyword}%`,
-                }),
-                where(
-                  fn(
-                    "LOWER",
-                    fn(
-                      "concat",
-                      col("prename"),
-                      col("firstname"),
-                      " ",
-                      col("lastname"),
-                    ),
-                  ),
-                  {
-                    [Op.like]: `%${keyword}%`,
-                  },
-                ),
-              ],
-            },
-      });
-
-      hnList = pats.map((p) => p.hn);
-
-      // ❌ ไม่เจอ → return เลย
-      if (hnList.length === 0) {
-        return res.json({
-          data: [],
-          pagination: { total: 0, page, limit, totalPages: 0, from: 0, to: 0 },
-        });
-      }
-    }
-
+    // 🔍 เงื่อนไข query form
     const whereCondition = {};
-
-    if (search && hnList.length > 0) {
-      whereCondition.hn = { [Op.in]: hnList };
-    }
     if (status) {
       whereCondition.form_status = status;
     }
@@ -103,7 +48,7 @@ exports.form_list = async (req, res) => {
     // 📌 ดึง HN จาก form
     const hnFromForm = form_list.map((item) => item.hn);
 
-    // 🔥 FIX สำคัญ (ต้องใช้ Op.in)
+    // 📌 ดึงข้อมูล Pat
     const pats = await db.Pat.findAll({
       where: {
         hn: {
@@ -118,30 +63,55 @@ exports.form_list = async (req, res) => {
       patMap[p.hn] = p;
     }
 
-    // 📤 format response
-    const data_form_list = form_list.map((item) => {
-      const pat = patMap[item.hn];
+    const keyword = search ? search.toLowerCase() : null;
 
-      const isNew = new Date(item.createdAt) > Date.now() - 5 * 60 * 1000; // 5 นาทีล่าสุด
+    // 🔥 map + filter
+    const data_form_list = form_list
+      .map((item) => {
+        const pat = patMap[item.hn]; // ✅ สำคัญ
 
-      const isUpdated =
-        item.updatedAt &&
-        item.createdAt !== item.updatedAt &&
-        new Date(item.updatedAt) > Date.now() - 5 * 60 * 1000;
+        const isNew = new Date(item.createdAt) > Date.now() - 5 * 60 * 1000;
 
-      return {
-        id: item.id ?? null,
-        hn: item.hn ?? null,
-        name: pat ? `${pat.prename}${pat.firstname} ${pat.lastname}` : null,
-        form_type: item.FormTypeName?.form_name ?? null,
-        status: item.form_status ?? null,
-        form_type_id: item.form_type_id ?? null,
-        createdAt: item.createdAt ?? null,
-        // 🔥 เพิ่มตรงนี้
-        isNew,
-        isUpdated,
-      };
-    });
+        const isUpdated =
+          item.updatedAt &&
+          item.createdAt !== item.updatedAt &&
+          new Date(item.updatedAt) > Date.now() - 5 * 60 * 1000;
+
+        const fullName = pat
+          ? `${pat.prename || ""}${pat.firstname || ""} ${pat.lastname || ""}`
+          : "";
+
+        const hn = String(item.hn || ""); // ✅ แก้ตรงนี้
+
+        return {
+          id: item.id ?? null,
+          hn: hn,
+          name: fullName,
+          form_type: item.FormTypeName?.form_name ?? null,
+          status: item.form_status ?? null,
+          form_type_id: item.form_type_id ?? null,
+          createdAt: item.createdAt ?? null,
+          isNew,
+          isUpdated,
+
+          _search: {
+            fullName: fullName.toLowerCase(),
+            hn: hn.toLowerCase(),
+          },
+        };
+      })
+      .filter((item) => {
+        if (!keyword) return true;
+
+        return (
+          item._search.fullName.includes(keyword) ||
+          item._search.hn.includes(keyword)
+        );
+      })
+      .map((item) => {
+        delete item._search;
+        return item;
+      });
 
     return res.json({
       data: data_form_list,

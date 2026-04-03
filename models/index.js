@@ -277,6 +277,10 @@ db.DoctorLocation.belongsTo(db.DoctorName, {
   foreignKey: "doctorid",
   as: "Doctor",
 });
+db.DoctorLocation.belongsTo(db.Location, {
+  foreignKey: "locationid",
+  as: "LocationDoctor",
+});
 
 db.AppDataGroup.hasMany(db.AppDataSetGroup, {
   foreignKey: "groupid",
@@ -293,15 +297,25 @@ db.AppDataSetGroup.belongsTo(db.Location, {
   as: "LocationSetGroup",
 });
 
-// create signature
-db.UserSignData.belongsTo(db.UserSign, {
+// signature;
+// UserSign.js
+db.UserSign.hasOne(db.UserSignData, {
   foreignKey: "id",
   as: "SignData",
 });
 
-db.DoctorImageData.belongsTo(db.DoctorImage, {
+// UserSignData.js
+db.UserSignData.belongsTo(db.UserSign, {
+  foreignKey: "id",
+});
+
+db.DoctorImage.belongsTo(db.DoctorImageData, {
   foreignKey: "id",
   as: "DoctorSignData",
+});
+
+db.DoctorImageData.belongsTo(db.DoctorImage, {
+  foreignKey: "id",
 });
 
 module.exports = db;

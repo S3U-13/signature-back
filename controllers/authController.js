@@ -1,7 +1,9 @@
 const db = require("../models");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+
 const hashPassword = require("../utils/hashPassword");
+
 require("dotenv").config();
 const defaultPassword = process.env.DEFAULT_PASSWORD;
 // const { logAction } = require("../services/logService");
@@ -127,7 +129,10 @@ exports.login = async (req, res) => {
       role = "staff";
     }
 
+    const doctorid = role === "doctor" ? doctor_data?.doctorid || null : null;
+
     const user_data = {
+      doctorid,
       userid: app_username?.userid ?? null,
       username: app_username?.username ?? null,
       role,
@@ -142,7 +147,8 @@ exports.login = async (req, res) => {
         id: user.id,
         userid: user.userid,
         username: user.username,
-        role: user_data.role,
+        role,
+        doctorid, // 🔥 ใช้ตัวเดียวกัน
       },
       process.env.JWT_SECRET || "secretkey",
       { expiresIn: process.env.JWT_EXPIRES_IN },
@@ -279,7 +285,10 @@ exports.me = async (req, res) => {
 
     const sex = doctor_data ? sex_doctor : app_person?.Sex;
 
+    const doctorid = doctor_data?.doctorid ?? null;
+
     const user_data = {
+      doctorid,
       userid: app_username?.userid ?? null,
       username: app_username?.username ?? null,
       person_name: name,

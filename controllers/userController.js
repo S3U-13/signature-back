@@ -22,6 +22,7 @@ exports.doctors_by_group_radio_therapy = async (req, res) => {
           ],
           where: { flag_active: "Y" },
         },
+        { model: db.Location, as: "LocationDoctor" },
       ],
     });
 
@@ -29,7 +30,8 @@ exports.doctors_by_group_radio_therapy = async (req, res) => {
       return {
         doctorid: doctors.doctorid,
         name: `${doctors.Doctor.doctorsalutation}${doctors.Doctor.doctorname} ${doctors.Doctor.doctorlastname}`,
-        group: doctors.locationid,
+        location: doctors.locationid,
+        location_name: doctors.LocationDoctor.detailtext,
       };
     });
 

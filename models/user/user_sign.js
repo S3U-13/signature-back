@@ -4,9 +4,12 @@ const sequelize = require("../../config/connect_db_user");
 const UserSign = sequelize.define(
   "UserSign",
   {
-    userid: DataTypes.INTEGER,
+    userid: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      unique: true, // 🔥 สำคัญ
+    },
     note: DataTypes.STRING,
-    userid: DataTypes.INTEGER,
     flag_type: DataTypes.STRING,
     flag_default: DataTypes.STRING,
     flag_cancel: DataTypes.STRING,

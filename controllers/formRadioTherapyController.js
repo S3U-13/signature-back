@@ -24,10 +24,20 @@ exports.form_list = async (req, res) => {
     const { sortField = "createdAt", sortOrder = "desc" } = req.query;
 
     // 🔍 เงื่อนไข query form
-    const whereCondition = {};
-    if (status) {
-      whereCondition.form_status = status;
+    const fields = ["creator", "viewer", "staff_id", "nurse_id"];
+
+    const orConditions = fields.map((f) => ({
+      [f]: req.user.userid,
+    }));
+
+    if (req.user.doctorid) {
+      orConditions.push({ doctor_id: req.user.doctorid });
     }
+
+    const whereCondition = {
+      ...(status && { form_status: status }),
+      [Op.or]: orConditions,
+    };
 
     // 📄 ดึง Form
     const { rows: form_list = [], count: total = 0 } =
@@ -186,6 +196,10 @@ exports.crate_form_by_doc = async (req, res) => {
       consent,
       doctor_sign,
       doctor_sign_date,
+      doctor_id,
+      staff_id,
+      nurse_id,
+      viewer,
     } = cleanedBody;
 
     const requiredFields = ["hn", "form_type_id"];
@@ -194,6 +208,11 @@ exports.crate_form_by_doc = async (req, res) => {
         return res.status(400).json({ error: `${field} is required` });
       }
     }
+    const doctor_user = await db.DoctorUser.findOne({
+      where: {
+        doctorid: doctor_id,
+      },
+    });
 
     const form = await db.Form.create(
       {
@@ -204,33 +223,52 @@ exports.crate_form_by_doc = async (req, res) => {
         disease,
         lmp,
         consent,
-        doctor_id: userId,
+        doctor_id,
+        doctor_userid: doctor_user.userid,
+        staff_id,
+        nurse_id,
+        viewer,
+        creator: userId,
       },
       { transaction: t },
     );
 
-    let buffer = {};
-
-    if (doctor_sign) {
-      buffer = signBuffers({ doctor_sign });
-    }
-
-    const doctor_signs = await db.DoctorSign.create(
+    await db.ViewedAt.create(
       {
         form_id: form.id,
-        doctor_id: userId,
-        doctor_sign: buffer.doctor_sign,
-        doctor_sign_date,
       },
       { transaction: t },
     );
+
+    await db.SignedAt.create(
+      {
+        form_id: form.id,
+      },
+      { transaction: t },
+    );
+
+    // let buffer = {};
+
+    // if (doctor_sign) {
+    //   buffer = signBuffers({ doctor_sign });
+    // }
+
+    // const doctor_signs = await db.DoctorSign.create(
+    //   {
+    //     form_id: form.id,
+    //     doctor_id: form.doctor_id,
+    //     // doctor_sign: buffer.doctor_sign,
+    //     doctor_sign_date,
+    //   },
+    //   { transaction: t },
+    // );
 
     await t.commit();
 
     res.status(200).json({
       message: "เพิ่มข้อมูลสำเร็จ",
-      form,
-      doctor_signs,
+      // form,
+      // doctor_signs,
     });
   } catch (error) {
     await t.rollback();
@@ -356,10 +394,27 @@ exports.show_pat_form_by_form_id = async (req, res) => {
       }),
     ]);
 
-    const doctor_user = await fetch(
-      `${process.env.API_URL}user/user-ppk-by-userid/${doctor_sign?.doctor_id}`,
-      { headers: { Cookie: cookie } },
-    ).then((res) => res.json());
+    let staff_user = null;
+    if (form.staff_id) {
+      staff_user = await fetch(
+        `${process.env.API_URL}user/user-ppk-by-userid/${form?.staff_id}`,
+        { headers: { Cookie: cookie } },
+      ).then((res) => res.json());
+    }
+    let nurse_user = null;
+    if (form.nurse_id) {
+      nurse_user = await fetch(
+        `${process.env.API_URL}user/user-ppk-by-userid/${form?.nurse_id}`,
+        { headers: { Cookie: cookie } },
+      ).then((res) => res.json());
+    }
+    let doctor_user = null;
+    if (form.doctor_id) {
+      doctor_user = await fetch(
+        `${process.env.API_URL}user/doctor-ppk-by-doctorid/${form?.doctor_id}`,
+        { headers: { Cookie: cookie } },
+      ).then((res) => res.json());
+    }
 
     //patient_sign
     let PatientSign = null;
@@ -413,8 +468,8 @@ exports.show_pat_form_by_form_id = async (req, res) => {
       docSign = signBase64(doctor_sign?.doctor_sign);
     }
     const doctorsign = {
-      doctor_id: doctor_sign.doctor_id,
-      doctor_sign_date: doctor_sign.doctor_sign_date,
+      doctor_id: doctor_sign?.doctor_id ?? null,
+      doctor_sign_date: doctor_sign?.doctor_sign_date ?? null,
       doctor_sign: docSign,
       doctor_name: doctor_user?.user_data?.person_name ?? null,
     };
@@ -442,7 +497,9 @@ exports.show_pat_form_by_form_id = async (req, res) => {
         staffsign: staffsign ?? null,
         nursesign: nursesign ?? null,
         doctorsign: doctorsign ?? null,
-        doctor_user: doctor_user ?? null,
+        doctor_user: doctor_user.user_data ?? null,
+        staff_user: staff_user.user_data ?? null,
+        nurse_user: nurse_user.user_data ?? null,
       },
       data_pat: {
         pat: pat ?? {},

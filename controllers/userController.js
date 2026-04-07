@@ -8,6 +8,10 @@ exports.doctors_by_group_radio_therapy = async (req, res) => {
     const doctors = await db.DoctorLocation.findAll({
       where: {
         locationid: [3020, 3021, 3025, 3026, 3027],
+        doctorid: {
+          [Op.notIn]: [89],
+          [Op.ne]: null,
+        },
       },
       include: [
         {
@@ -23,11 +27,13 @@ exports.doctors_by_group_radio_therapy = async (req, res) => {
           where: { flag_active: "Y" },
         },
         { model: db.Location, as: "LocationDoctor" },
+        { model: db.DoctorUser, as: "DoctorUserByDoctorLocation" },
       ],
     });
 
     const doctorFormatted = doctors.map((doctors) => {
       return {
+        userid: doctors.DoctorUserByDoctorLocation?.userid ?? null,
         doctorid: doctors.doctorid,
         name: `${doctors.Doctor.doctorsalutation}${doctors.Doctor.doctorname} ${doctors.Doctor.doctorlastname}`,
         location: doctors.locationid,
@@ -252,6 +258,75 @@ exports.user_ppk = async (req, res) => {
     return res.status(200).json({ user_data });
   } catch (error) {
     console.log(error); // 👈 สำคัญ
+    return res.status(500).json({ message: error.message });
+  }
+};
+
+exports.doctor_ppk = async (req, res) => {
+  const { doctorid } = req.params;
+  try {
+    const [doctor_user, doctor_name] = await Promise.all([
+      db.DoctorUser.findOne({ where: { doctorid: doctorid } }),
+      db.DoctorName.findOne({
+        where: { doctorid: doctorid },
+        include: [
+          {
+            model: db.DoctorFlag,
+            as: "Specialist",
+            where: { columnname: "doctorspecialist" },
+          },
+          {
+            model: db.DoctorFlag,
+            as: "Level",
+            where: { columnname: "doctorlevel" },
+          },
+        ],
+      }),
+    ]);
+
+    const user = await db.AppUser.findOne({
+      where: { userid: doctor_user.userid },
+    });
+    const app_person = await db.AppPerson.findOne({
+      where: { id: user.personid },
+      include: [
+        { model: db.Lookup, as: "Salutation", where: { lookuptypeid: 17 } },
+        { model: db.AppGroup, as: "Group" },
+        { model: db.AppPosition, as: "Position" },
+        { model: db.PersonalOfficeGroup, as: "Office" },
+        { model: db.AppPersonFunctionalUnit, as: "Funcunit" },
+      ],
+    });
+
+    const name =
+      `${doctor_name?.doctorsalutation}${doctor_name?.doctorname} ${doctor_name?.doctorlastname}` ??
+      null;
+
+    const sex = doctor_name?.sex === "F" ? "หญิง" : "ชาย";
+
+    const specialist = doctor_name ? doctor_name?.Specialist.descvalue : "";
+    const level = doctor_name ? doctor_name?.Level.descvalue : "";
+    const doctor_license = doctor_name ? doctor_name?.doctorlicenseid : "";
+
+    const user_data = {
+      person_name: name,
+      sex,
+      doctor_license,
+      GroID: app_person?.GroID ?? null,
+      group: app_person?.Group?.groupname ?? null,
+      PosID: app_person?.PosID ?? null,
+      position: app_person?.Position?.Positionname ?? null,
+      OffID: app_person?.OffID ?? null,
+      office: app_person?.Office?.offname ?? null,
+      FuncunitID: app_person?.FuncUnitID ?? null,
+      func_unit: app_person?.Funcunit?.FuncunitName ?? null,
+      specialist,
+      level,
+      birthday: app_person?.Birthday ?? null,
+    };
+    return res.status(200).json({ user_data });
+  } catch (error) {
+    console.log(error);
     return res.status(500).json({ message: error.message });
   }
 };

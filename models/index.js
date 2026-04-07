@@ -29,6 +29,8 @@ db.WitnessSign = require("./radiotherapy_consent_form/witness_sign");
 db.StaffSign = require("./radiotherapy_consent_form/staff_sign");
 db.DoctorSign = require("./radiotherapy_consent_form/doctor_sign");
 db.NurseSign = require("./radiotherapy_consent_form/nurse_sign");
+db.ViewedAt = require("./radiotherapy_consent_form/viewed_at");
+db.SignedAt = require("./radiotherapy_consent_form/signed_at");
 //manage staff
 db.ManageStaff = require("./radiotherapy_consent_form/manage_staff");
 //his
@@ -125,6 +127,14 @@ db.Form.hasOne(db.NurseSign, {
   foreignKey: "form_id",
   as: "NurseSigns",
 });
+db.Form.hasOne(db.ViewedAt, {
+  foreignKey: "form_id",
+  as: "ViewedAt",
+});
+db.Form.hasOne(db.SignedAt, {
+  foreignKey: "form_id",
+  as: "SignedAt",
+});
 
 // belongsTo
 db.PatientContacts.belongsTo(db.Form, {
@@ -168,6 +178,14 @@ db.DoctorSign.belongsTo(db.Form, {
 });
 
 db.NurseSign.belongsTo(db.Form, {
+  foreignKey: "form_id",
+});
+
+db.ViewedAt.belongsTo(db.Form, {
+  foreignKey: "form_id",
+});
+
+db.SignedAt.belongsTo(db.Form, {
   foreignKey: "form_id",
 });
 
@@ -280,6 +298,11 @@ db.DoctorLocation.belongsTo(db.DoctorName, {
 db.DoctorLocation.belongsTo(db.Location, {
   foreignKey: "locationid",
   as: "LocationDoctor",
+});
+
+db.DoctorLocation.belongsTo(db.DoctorUser, {
+  foreignKey: "doctorid",
+  as: "DoctorUserByDoctorLocation",
 });
 
 db.AppDataGroup.hasMany(db.AppDataSetGroup, {

@@ -9,25 +9,31 @@ module.exports = {
      * Example:
      * await queryInterface.createTable('users', { id: Sequelize.INTEGER });
      */
-    await queryInterface.createTable("user_sign", {
+    await queryInterface.createTable("viewed_at", {
       id: {
         primaryKey: true,
-        allowNull: false,
         autoIncrement: true,
+        allowNull: false,
         type: Sequelize.INTEGER,
       },
-      userid: {
+      form_id: {
         allowNull: true,
         type: Sequelize.INTEGER,
       },
-      signature: {
+      staff_viewed_at: {
         allowNull: true,
-        type: Sequelize.BLOB,
+        type: Sequelize.STRING(10),
+        defaultValue: "unread",
       },
-      flag_status: {
+      nurse_viewed_at: {
         allowNull: true,
-        defaultValue: "a",
-        type: Sequelize.STRING,
+        type: Sequelize.STRING(10),
+        defaultValue: "unread",
+      },
+      doctor_viewed_at: {
+        allowNull: true,
+        type: Sequelize.STRING(10),
+        defaultValue: "unread",
       },
       createdAt: {
         allowNull: true,
@@ -47,6 +53,6 @@ module.exports = {
      * Example:
      * await queryInterface.dropTable('users');
      */
-    await queryInterface.dropTable("user_sign");
+    await queryInterface.dropTable("viewed_at");
   },
 };

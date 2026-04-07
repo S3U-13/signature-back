@@ -1,4 +1,4 @@
-const FormType = require("../models/form_type");
+const FormType = require("../models/radiotherapy_consent_form/form_type");
 
 const type_name = [
   { form_name: "หนังสืออธิบายและยินยอมให้ทำการจำลองการฉายรังสี" },

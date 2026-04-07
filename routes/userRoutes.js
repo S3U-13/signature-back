@@ -7,6 +7,7 @@ const formRadioTherapyController = require("../controllers/formRadioTherapyContr
 const userController = require("../controllers/userController");
 const manageStaffController = require("../controllers/manageStaffController");
 const addSignatureController = require("../controllers/addSignatureController");
+const mailController = require("../controllers/mailController");
 
 // const apiLogger = require("../middleware/apiLogger");
 const {
@@ -60,6 +61,8 @@ router.put(
 
 router.get("/user-ppk-by-userid/:userid", userController.user_ppk);
 
+router.get("/doctor-ppk-by-doctorid/:doctorid", userController.doctor_ppk);
+
 router.get(
   "/doctors-group-radio-therapy",
   userController.doctors_by_group_radio_therapy,
@@ -87,5 +90,8 @@ router.put(
   "/user-add-or-edit-signature",
   addSignatureController.addOrEditSignature,
 );
+
+//warn
+router.get("/warn", mailController.warn);
 
 module.exports = router;

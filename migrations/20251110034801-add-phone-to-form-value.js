@@ -38,11 +38,17 @@ module.exports = {
         allowNull: true,
         type: Sequelize.INTEGER,
       },
+      creator: { allowNull: true, type: Sequelize.INTEGER },
+      viewer: { allowNull: true, type: Sequelize.INTEGER },
       staff_id: {
         allowNull: true,
         type: Sequelize.INTEGER,
       },
       nurse_id: {
+        allowNull: true,
+        type: Sequelize.INTEGER,
+      },
+      doctor_userid: {
         allowNull: true,
         type: Sequelize.INTEGER,
       },
@@ -207,6 +213,7 @@ module.exports = {
         allowNull: true,
         type: Sequelize.BLOB,
       },
+      signature_id: { allowNull: true, type: Sequelize.INTEGER },
       staff_sign_date: {
         allowNull: true,
         type: Sequelize.DATE,
@@ -245,6 +252,7 @@ module.exports = {
         allowNull: true,
         type: Sequelize.BLOB,
       },
+      signature_id: { allowNull: true, type: Sequelize.INTEGER },
       doctor_sign_date: {
         allowNull: true,
         type: Sequelize.DATE,

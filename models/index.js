@@ -29,8 +29,7 @@ db.WitnessSign = require("./radiotherapy_consent_form/witness_sign");
 db.StaffSign = require("./radiotherapy_consent_form/staff_sign");
 db.DoctorSign = require("./radiotherapy_consent_form/doctor_sign");
 db.NurseSign = require("./radiotherapy_consent_form/nurse_sign");
-db.ViewedAt = require("./radiotherapy_consent_form/viewed_at");
-db.SignedAt = require("./radiotherapy_consent_form/signed_at");
+db.FormAction = require("./radiotherapy_consent_form/form_actions");
 //manage staff
 db.ManageStaff = require("./radiotherapy_consent_form/manage_staff");
 //his
@@ -127,13 +126,11 @@ db.Form.hasOne(db.NurseSign, {
   foreignKey: "form_id",
   as: "NurseSigns",
 });
-db.Form.hasOne(db.ViewedAt, {
+
+// form hasMany form_id in form_actions
+db.Form.hasMany(db.FormAction, {
   foreignKey: "form_id",
-  as: "ViewedAt",
-});
-db.Form.hasOne(db.SignedAt, {
-  foreignKey: "form_id",
-  as: "SignedAt",
+  as: "FormActions",
 });
 
 // belongsTo
@@ -181,11 +178,7 @@ db.NurseSign.belongsTo(db.Form, {
   foreignKey: "form_id",
 });
 
-db.ViewedAt.belongsTo(db.Form, {
-  foreignKey: "form_id",
-});
-
-db.SignedAt.belongsTo(db.Form, {
+db.FormAction.belongsTo(db.Form, {
   foreignKey: "form_id",
 });
 

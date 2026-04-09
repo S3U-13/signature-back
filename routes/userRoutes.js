@@ -92,6 +92,8 @@ router.put(
 );
 
 //warn
-router.get("/warn", mailController.warn);
+router.get("/count-warn", mailController.warn);
+
+router.put("/change-status-warn/:id", mailController.change_status_warn);
 
 module.exports = router;

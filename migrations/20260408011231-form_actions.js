@@ -9,7 +9,7 @@ module.exports = {
      * Example:
      * await queryInterface.createTable('users', { id: Sequelize.INTEGER });
      */
-    await queryInterface.createTable("viewed_at", {
+    await queryInterface.createTable("form_actions", {
       id: {
         primaryKey: true,
         autoIncrement: true,
@@ -20,28 +20,30 @@ module.exports = {
         allowNull: true,
         type: Sequelize.INTEGER,
       },
-      staff_viewed_at: {
+      userid: {
         allowNull: true,
-        type: Sequelize.STRING(10),
-        defaultValue: "unread",
+        type: Sequelize.INTEGER,
       },
-      nurse_viewed_at: {
+      doctorid: {
+        type: Sequelize.INTEGER,
         allowNull: true,
-        type: Sequelize.STRING(10),
-        defaultValue: "unread",
       },
-      doctor_viewed_at: {
+      role: {
         allowNull: true,
-        type: Sequelize.STRING(10),
-        defaultValue: "unread",
+        type: Sequelize.STRING,
       },
-      createdAt: {
+      status: {
+        type: Sequelize.STRING(20),
+        allowNull: false,
+        defaultValue: "pending",
+      },
+      viewed_at: {
         allowNull: true,
         type: Sequelize.DATE,
       },
-      updatedAt: {
-        allowNull: true,
+      signed_at: {
         type: Sequelize.DATE,
+        allowNull: true,
       },
     });
   },
@@ -53,6 +55,5 @@ module.exports = {
      * Example:
      * await queryInterface.dropTable('users');
      */
-    await queryInterface.dropTable("viewed_at");
   },
 };

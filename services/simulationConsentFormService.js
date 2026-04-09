@@ -12,6 +12,9 @@ exports.simulationConsentFormService = async (id, body) => {
     const cleanedBody = emptyToNull(body);
     // ประกาศ field รับค่า req
     const {
+      userid,
+      doctorid,
+      role,
       hn,
       disease,
       lmp,
@@ -66,6 +69,8 @@ exports.simulationConsentFormService = async (id, body) => {
       drug_allergy_status_existing,
       seafood_allergy_status_existing,
       pat_sign_existing,
+      user_sign_existing,
+      doctor_imagedata_existing,
       witness_sign_existing,
       staff_sign_existing,
       nurse_sign_existing,
@@ -84,7 +89,13 @@ exports.simulationConsentFormService = async (id, body) => {
         where: { form_id: id },
         transaction: t,
       }),
-      db.PatSign.findOne({ where: { form_id: id }, transaction: t }),
+      db.PatSign.findOne({ where: { userid: userid }, transaction: t }),
+      db.DoctorSign.findOne({ where: { doctorid: doctorid }, transaction: t }),
+      db.UserSign.findOne({
+        where: { userid: id },
+        transaction: t,
+        include: [{ model: db.UserSignData, as: "SignData" }],
+      }),
       db.WitnessSign.findOne({ where: { form_id: id }, transaction: t }),
       db.StaffSign.findOne({ where: { form_id: id }, transaction: t }),
       db.NurseSign.findOne({ where: { form_id: id }, transaction: t }),
@@ -245,7 +256,7 @@ exports.simulationConsentFormService = async (id, body) => {
       );
     }
 
-    if (staff_sign_existing) {
+    if (staff_sign_existing && role === "staff") {
       await db.StaffSign.update(
         {
           staff_id,
@@ -288,6 +299,14 @@ exports.simulationConsentFormService = async (id, body) => {
         { transaction: t },
       );
     }
+
+    await db.FormAction.update(
+      {
+        status: "signed",
+        signed_at: new Date(),
+      },
+      { where: { form_id: id, userid: userid }, transaction: t },
+    );
     await t.commit();
 
     return true;

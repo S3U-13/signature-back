@@ -233,19 +233,37 @@ exports.crate_form_by_doc = async (req, res) => {
       { transaction: t },
     );
 
-    await db.ViewedAt.create(
-      {
-        form_id: form.id,
-      },
-      { transaction: t },
-    );
+    const actions = [];
 
-    await db.SignedAt.create(
-      {
+    if (staff_id) {
+      actions.push({
         form_id: form.id,
-      },
-      { transaction: t },
-    );
+        role: "staff",
+        userid: staff_id,
+        status: "pending",
+      });
+    }
+
+    if (nurse_id) {
+      actions.push({
+        form_id: form.id,
+        role: "nurse",
+        userid: nurse_id,
+        status: "pending",
+      });
+    }
+
+    if (doctor_id) {
+      actions.push({
+        form_id: form.id,
+        role: "doctor",
+        userid: doctor_user.userid,
+        doctorid: doctor_id,
+        status: "pending",
+      });
+    }
+
+    await db.FormAction.bulkCreate(actions, { transaction: t });
 
     // let buffer = {};
 

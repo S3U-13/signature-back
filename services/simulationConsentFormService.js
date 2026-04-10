@@ -4,17 +4,15 @@ const { Op, Model } = require("sequelize");
 const { emptyToNull } = require("../utils/empty-to-null");
 const { signBuffers } = require("../utils/signatureInputHelper");
 
-exports.simulationConsentFormService = async (id, body) => {
+exports.simulationConsentFormService = async (id, body, user) => {
   const t = await sequelize.transaction();
 
   try {
+    const role = user?.role;
     // function เเปลงค่าว่างเป็น null
     const cleanedBody = emptyToNull(body);
     // ประกาศ field รับค่า req
     const {
-      userid,
-      doctorid,
-      role,
       hn,
       disease,
       lmp,
@@ -34,13 +32,13 @@ exports.simulationConsentFormService = async (id, body) => {
       witness_name,
       witness_sign,
       witness_sign_date,
-      staff_id,
-      staff_position,
-      staff_sign,
+      staff_posid,
+      staff_sign_id,
       staff_sign_date,
-      nurse_id,
-      nurse_sign,
+      nurse_sign_id,
       nurse_sign_date,
+      doctor_sign_id,
+      doctor_sign_date,
     } = cleanedBody;
 
     // ประกาศ field สำคัญ ที่ req ต้อง การ
@@ -69,11 +67,10 @@ exports.simulationConsentFormService = async (id, body) => {
       drug_allergy_status_existing,
       seafood_allergy_status_existing,
       pat_sign_existing,
-      user_sign_existing,
-      doctor_imagedata_existing,
       witness_sign_existing,
       staff_sign_existing,
       nurse_sign_existing,
+      doctor_sign_existing,
     ] = await Promise.all([
       db.PatientContacts.findOne({ where: { form_id: id }, transaction: t }),
       db.ContrastAllergyStatus.findOne({
@@ -89,24 +86,40 @@ exports.simulationConsentFormService = async (id, body) => {
         where: { form_id: id },
         transaction: t,
       }),
-      db.PatSign.findOne({ where: { userid: userid }, transaction: t }),
-      db.DoctorSign.findOne({ where: { doctorid: doctorid }, transaction: t }),
-      db.UserSign.findOne({
-        where: { userid: id },
+      db.PatSign.findOne({
+        where: { form_id: id },
         transaction: t,
-        include: [{ model: db.UserSignData, as: "SignData" }],
       }),
+
       db.WitnessSign.findOne({ where: { form_id: id }, transaction: t }),
       db.StaffSign.findOne({ where: { form_id: id }, transaction: t }),
       db.NurseSign.findOne({ where: { form_id: id }, transaction: t }),
+      db.DoctorSign.findOne({ where: { form_id: id }, transaction: t }),
     ]);
+
+    // let user_sign_existing = null;
+
+    // if (role === "nurse" || role === "staff") {
+    //   user_sign_existing = await db.UserSign.findOne({
+    //     where: { userid: id },
+    //     transaction: t,
+    //     include: [{ model: db.UserSignData, as: "SignData" }],
+    //   });
+    // }
+
+    // let doctor_imagedata_existing = null;
+    // if (role === "doctor") {
+    //   doctor_imagedata_existing = await db.DoctorSign.findOne({
+    //     where: { doctorid: doctorid },
+    //     transaction: t,
+    //     include: [{ model: db.DoctorImageData, as: "DoctorSignData" }],
+    //   });
+    // }
 
     //sign buffer
     const buffers = signBuffers({
       patient_sign,
       witness_sign,
-      staff_sign,
-      nurse_sign,
     });
 
     if (patient_contact_existing) {
@@ -256,57 +269,97 @@ exports.simulationConsentFormService = async (id, body) => {
       );
     }
 
-    if (staff_sign_existing && role === "staff") {
-      await db.StaffSign.update(
-        {
-          staff_id,
-          staff_position,
-          staff_sign: buffers.staff_sign,
-          staff_sign_date,
-        },
-        { where: { form_id: id }, transaction: t },
-      );
-    } else {
-      await db.StaffSign.create(
-        {
-          form_id: id,
-          staff_id,
-          staff_position,
-          staff_sign: buffers.staff_sign,
-          staff_sign_date,
-        },
-        { transaction: t },
-      );
+    if (role === "staff") {
+      if (staff_sign_existing) {
+        await db.StaffSign.update(
+          {
+            staff_id: user.userid,
+            staff_position: staff_posid,
+            signature_id: staff_sign_id,
+            staff_sign_date,
+          },
+          { where: { form_id: id }, transaction: t },
+        );
+      } else {
+        await db.StaffSign.create(
+          {
+            form_id: id,
+            staff_id: user.userid,
+            staff_position: staff_posid,
+            signature_id: staff_sign_id,
+            staff_sign_date,
+          },
+          { transaction: t },
+        );
+      }
     }
 
-    if (nurse_sign_existing) {
-      await db.NurseSign.update(
-        {
-          nurse_id,
-          nurse_sign: buffers.nurse_sign,
-          nurse_sign_date,
-        },
-        { where: { form_id: id }, transaction: t },
-      );
-    } else {
-      await db.NurseSign.create(
-        {
-          form_id: id,
-          nurse_id,
-          nurse_sign: buffers.nurse_sign,
-          nurse_sign_date,
-        },
-        { transaction: t },
-      );
+    if (role === "nurse") {
+      if (nurse_sign_existing) {
+        await db.NurseSign.update(
+          {
+            nurse_id: user.userid,
+            signature_id: nurse_sign_id,
+            nurse_sign_date,
+          },
+          { where: { form_id: id }, transaction: t },
+        );
+      } else {
+        await db.NurseSign.create(
+          {
+            form_id: id,
+            nurse_id: user.userid,
+            signature_id: nurse_sign_id,
+            nurse_sign_date,
+          },
+          { transaction: t },
+        );
+      }
     }
+    if (role === "doctor") {
+      if (doctor_sign_existing) {
+        await db.DoctorSign.update(
+          {
+            doctor_id: user.doctorid,
+            signature_id: doctor_sign_id,
+            doctor_sign_date,
+          },
+          { where: { form_id: id }, transaction: t },
+        );
+      } else {
+        await db.DoctorSign.create(
+          {
+            form_id: id,
+            doctor_id: user.doctorid,
+            signature_id: doctor_sign_id,
+            doctor_sign_date,
+          },
+          { transaction: t },
+        );
+      }
+    }
+    const statusMap = {
+      staff: staff_sign_id,
+      nurse: nurse_sign_id,
+      doctor: doctor_sign_id,
+    };
+
+    const status = statusMap[role] ? "signed" : "unsigned";
+
+    const where = {
+      form_id: id,
+      userid: user?.userid,
+      ...(role === "doctor" && { doctorid: user.doctorid }),
+    };
 
     await db.FormAction.update(
       {
-        status: "signed",
+        status,
         signed_at: new Date(),
       },
-      { where: { form_id: id, userid: userid }, transaction: t },
+      { where, transaction: t },
     );
+
     await t.commit();
 
     return true;

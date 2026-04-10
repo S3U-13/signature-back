@@ -7,6 +7,7 @@ const NurseSign = sequelize.define(
     form_id: DataTypes.INTEGER,
     nurse_id: DataTypes.INTEGER,
     nurse_sign: DataTypes.BLOB,
+    signature_id: DataTypes.INTEGER,
     nurse_sign_date: DataTypes.DATE,
     flag_status: DataTypes.STRING,
   },

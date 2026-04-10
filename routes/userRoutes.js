@@ -80,7 +80,7 @@ router.put(
   "/add-or-delete-manage-staff",
   manageStaffController.addOrDeleteManageStaff,
 );
-// signature add
+// signature
 router.get(
   "/get-signature",
   authenticateToken,
@@ -90,10 +90,10 @@ router.put(
   "/user-add-or-edit-signature",
   addSignatureController.addOrEditSignature,
 );
+router.post("/confirm-signature", addSignatureController.getSignatureInForm);
 
 //warn
 router.get("/count-warn", mailController.warn);
-
 router.put("/change-status-warn/:id", mailController.change_status_warn);
 
 module.exports = router;

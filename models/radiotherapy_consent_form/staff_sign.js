@@ -9,8 +9,13 @@ const StaffSign = sequelize.define(
       type: DataTypes.INTEGER,
       allowNull: true,
     },
+    signature_id: DataTypes.INTEGER,
     staff_sign: {
       type: DataTypes.BLOB,
+      allowNull: true,
+    },
+    staff_position: {
+      type: DataTypes.STRING,
       allowNull: true,
     },
     staff_sign_date: {

@@ -336,6 +336,43 @@ exports.show_pat_form_by_form_id = async (req, res) => {
       db.NurseSign.findOne({ where: { form_id: id } }),
     ]);
 
+    const UserSignMapById = {
+      staff_sign_id: staff_sign?.signature_id,
+      nurse_sign_id: nurse_sign?.signature_id,
+    };
+
+    let users_sign = {};
+
+    for (const [key, signature_id] of Object.entries(UserSignMapById)) {
+      if (signature_id) {
+        const userSignData = await db.UserSign.findOne({
+          where: {
+            id: signature_id,
+            flag_type: "A",
+            flag_default: "Y",
+            flag_cancel: "N",
+          },
+          include: [{ model: db.UserSignData, as: "SignData" }],
+        });
+        users_sign[key] = userSignData;
+      }
+    }
+
+    const doctorSignId = doctor_sign?.signature_id;
+
+    let doctor_sign_data = null;
+    if (doctorSignId) {
+      doctor_sign_data = await db.DoctorImage.findOne({
+        where: {
+          id: doctorSignId,
+          flag_type: "A",
+          flag_default: "Y",
+          flag_cancel: "N",
+        },
+        include: [{ model: db.DoctorImageData, as: "DoctorSignData" }],
+      });
+    }
+
     if (!form) {
       return res.status(404).json({ message: "Form not found" });
     }
@@ -459,8 +496,8 @@ exports.show_pat_form_by_form_id = async (req, res) => {
     //staff_sign
     let StaffSign = null;
 
-    if (staff_sign?.staff_sign) {
-      StaffSign = signBase64(staff_sign?.staff_sign);
+    if (users_sign.staff_sign_id?.SignData?.signature) {
+      StaffSign = signBase64(users_sign.staff_sign_id?.SignData?.signature);
     }
     const staffsign = {
       staff_id: staff_sign?.staff_id,
@@ -470,8 +507,8 @@ exports.show_pat_form_by_form_id = async (req, res) => {
     //nurse_sign
     let NurseSign = null;
 
-    if (nurse_sign?.nurse_sign) {
-      NurseSign = signBase64(nurse_sign?.nurse_sign);
+    if (users_sign.nurse_sign_id?.SignData?.signature) {
+      NurseSign = signBase64(users_sign.nurse_sign_id?.SignData?.signature);
     }
     const nursesign = {
       nurse_id: nurse_sign?.nurse_id,
@@ -482,8 +519,8 @@ exports.show_pat_form_by_form_id = async (req, res) => {
     //doctor sing
     let docSign = null;
 
-    if (doctor_sign?.doctor_sign) {
-      docSign = signBase64(doctor_sign?.doctor_sign);
+    if (doctor_sign_data?.DoctorSignData?.imagedata) {
+      docSign = signBase64(doctor_sign_data?.DoctorSignData?.imagedata);
     }
     const doctorsign = {
       doctor_id: doctor_sign?.doctor_id ?? null,
@@ -548,15 +585,15 @@ exports.edit_form = async (req, res) => {
 
     switch (form.form_type_id) {
       case 1:
-        await simulationConsentFormService(id, req.body);
+        await simulationConsentFormService(id, req.body, req.user);
         break;
 
       case 2:
-        await radiotherapyConsentFormService(id, req.body);
+        await radiotherapyConsentFormService(id, req.body, req.user);
         break;
 
       case 3:
-        await brachytherapyConsentFormService(id, req.body);
+        await brachytherapyConsentFormService(id, req.body, req.user);
         break;
 
       default:

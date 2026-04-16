@@ -503,6 +503,7 @@ exports.show_pat_form_by_form_id = async (req, res) => {
       staff_id: staff_sign?.staff_id,
       staff_sign_date: staff_sign?.staff_sign_date,
       staff_sign: StaffSign,
+      signature_id: staff_sign?.signature_id,
     };
     //nurse_sign
     let NurseSign = null;
@@ -514,6 +515,7 @@ exports.show_pat_form_by_form_id = async (req, res) => {
       nurse_id: nurse_sign?.nurse_id,
       nurse_sign_date: nurse_sign?.nurse_sign_date,
       nurse_sign: NurseSign,
+      signature_id: nurse_sign?.signature_id,
     };
 
     //doctor sing
@@ -527,6 +529,7 @@ exports.show_pat_form_by_form_id = async (req, res) => {
       doctor_sign_date: doctor_sign?.doctor_sign_date ?? null,
       doctor_sign: docSign,
       doctor_name: doctor_user?.user_data?.person_name ?? null,
+      signature_id: doctor_sign?.signature_id,
     };
 
     const patient_contact = {

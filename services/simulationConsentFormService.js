@@ -3,6 +3,7 @@ const { sequelize } = db;
 const { Op, Model } = require("sequelize");
 const { emptyToNull } = require("../utils/empty-to-null");
 const { signBuffers } = require("../utils/signatureInputHelper");
+const { checkAndUpdateFormStatus } = require("./checkAndUpdateFormStatus");
 
 exports.simulationConsentFormService = async (id, body, user) => {
   const t = await sequelize.transaction();
@@ -338,6 +339,9 @@ exports.simulationConsentFormService = async (id, body, user) => {
         );
       }
     }
+    // -------------------------
+    // FormAction update
+    // -------------------------
     const statusMap = {
       staff: staff_sign_id,
       nurse: nurse_sign_id,
@@ -352,13 +356,20 @@ exports.simulationConsentFormService = async (id, body, user) => {
       ...(role === "doctor" && { doctorid: user.doctorid }),
     };
 
-    await db.FormAction.update(
+    const updated = await db.FormAction.update(
       {
         status,
         signed_at: new Date(),
       },
       { where, transaction: t },
     );
+
+    if (updated === 0) {
+      throw new Error("FormAction not found to update");
+    }
+
+    // ✅🔥 แก้ตรงนี้
+    await checkAndUpdateFormStatus(id, t);
 
     await t.commit();
 

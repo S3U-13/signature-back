@@ -142,7 +142,7 @@ exports.warn = async (req, res) => {
       const creator = personMap[creatorId];
       const creator_name = creator?.firstname_lastname ?? "ไม่ทราบชื่อ";
       const sex = creator?.sex;
-      role = creator.role
+      role = creator.role;
 
       const createdAt = a.Form?.createdAt;
       const createdTime = createdAt ? new Date(createdAt) : null;
@@ -281,3 +281,151 @@ exports.change_status_warn = async (req, res) => {
     return res.status(500).json({ message: error.message });
   }
 };
+
+// exports.history = async (req, res) => {
+//   const cookie = req.headers.cookie;
+
+//   try {
+//     const userid = req.user.userid;
+//     const doctorid = req.user.doctorid;
+
+//     const where = {
+//       status: "signed", // ✅ เอาเฉพาะที่เซ็นแล้ว
+//     };
+
+//     if (doctorid) {
+//       where[Op.or] = [{ userid }, { doctorid }];
+//     } else {
+//       where.userid = userid;
+//     }
+
+//     const actions = await db.FormAction.findAll({
+//       where,
+//       include: [
+//         {
+//           model: db.Form,
+//           attributes: [
+//             "id",
+//             "form_type_id",
+//             "hn",
+//             "creator",
+//             "createdAt",
+//             "updatedAt",
+//           ],
+//           include: [
+//             {
+//               model: db.FormType,
+//               as: "FormTypeName",
+//               attributes: ["form_name"],
+//             },
+//           ],
+//         },
+//       ],
+//       order: [["signed_at", "DESC"]], // ✅ เรียงตามเวลาที่เซ็น
+//     });
+
+//     // 🔥 ดึง creator
+//     const creatorIds = [
+//       ...new Set(actions.map((a) => a.Form?.creator).filter(Boolean)),
+//     ];
+
+//     let personMap = {};
+
+//     if (creatorIds.length > 0) {
+//       const response = await fetch(
+//         `${process.env.API_URL}user/user-ppk-by-userid/${creatorIds.join(",")}`,
+//         { headers: { Cookie: cookie } },
+//       );
+
+//       const json = await response.json();
+
+//       const persons = Array.isArray(json.user_data)
+//         ? json.user_data
+//         : json.user_data
+//           ? [json.user_data]
+//           : [];
+
+//       personMap = Object.fromEntries(
+//         persons.filter((p) => p?.userid).map((p) => [String(p.userid), p]),
+//       );
+//     }
+
+//     const now = new Date();
+
+//     const historyList = actions.map((a) => {
+//       const creatorId = String(a.Form?.creator);
+//       const creator = personMap[creatorId];
+
+//       const creator_name = creator?.firstname_lastname ?? "ไม่ทราบชื่อ";
+//       const sex = creator?.sex;
+
+//       const signedAt = a.signed_at ? new Date(a.signed_at) : null;
+
+//       let timeText = "";
+
+//       if (signedAt) {
+//         const diffMs = now - signedAt;
+//         const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+//         const isSameDay =
+//           now.getDate() === signedAt.getDate() &&
+//           now.getMonth() === signedAt.getMonth() &&
+//           now.getFullYear() === signedAt.getFullYear();
+
+//         const isYesterday =
+//           new Date(
+//             now.getFullYear(),
+//             now.getMonth(),
+//             now.getDate() - 1,
+//           ).toDateString() === signedAt.toDateString();
+
+//         if (isSameDay) {
+//           const h = signedAt.getHours().toString().padStart(2, "0");
+//           const m = signedAt.getMinutes().toString().padStart(2, "0");
+//           timeText = `${h}:${m} น.`;
+//         } else if (isYesterday) {
+//           timeText = "เมื่อวาน";
+//         } else {
+//           const thaiMonths = [
+//             "ม.ค.",
+//             "ก.พ.",
+//             "มี.ค.",
+//             "เม.ย.",
+//             "พ.ค.",
+//             "มิ.ย.",
+//             "ก.ค.",
+//             "ส.ค.",
+//             "ก.ย.",
+//             "ต.ค.",
+//             "พ.ย.",
+//             "ธ.ค.",
+//           ];
+//           timeText = `${signedAt.getDate()} ${thaiMonths[signedAt.getMonth()]}`;
+//         }
+//       }
+
+//       return {
+//         id: a.id,
+//         form_id: a.form_id,
+//         hn: a.Form?.hn,
+//         form_type_id: a.Form?.form_type_id,
+//         form_type_name: a.Form?.FormTypeName?.form_name,
+//         status: a.status,
+//         creator_name,
+//         creator: a.Form?.creator,
+//         by_userid: a.userid,
+//         sex,
+//         signed_at: a.signed_at,
+//         time: timeText,
+//       };
+//     });
+
+//     return res.json({
+//       count: historyList.length,
+//       history: historyList,
+//     });
+//   } catch (error) {
+//     console.error(error);
+//     return res.status(500).json({ message: error.message });
+//   }
+// };

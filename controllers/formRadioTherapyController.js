@@ -283,6 +283,15 @@ exports.crate_form_by_doc = async (req, res) => {
 
     await t.commit();
 
+    const targets = [staff_id, nurse_id, doctor_user?.userid].filter(Boolean);
+
+    targets.forEach((uid) => {
+      global.io.to(`user_${uid}`).emit("new-notification", {
+        form_id: form.id,
+        message: "มีเอกสารใหม่ให้เซ็น",
+      });
+    });
+
     res.status(200).json({
       message: "เพิ่มข้อมูลสำเร็จ",
       // form,

@@ -24,26 +24,52 @@ exports.doctors_by_group_radio_therapy = async (req, res) => {
             "doctorsalutation",
             "flag_active",
           ],
-          where: { flag_active: "Y" },
+          where: {
+            flag_active: "Y",
+          },
         },
-        { model: db.Location, as: "LocationDoctor" },
-        { model: db.DoctorUser, as: "DoctorUserByDoctorLocation" },
+        {
+          model: db.Location,
+          as: "LocationDoctor",
+        },
+        {
+          model: db.DoctorUser,
+          as: "DoctorUserByDoctorLocation",
+          include: [
+            {
+              model: db.AppUser,
+              as: "DoctorUserId", // ✅ FIX ตรงนี้
+              where: {
+                active: "Y",
+              },
+              include: [
+                {
+                  model: db.AppPerson,
+                  as: "Person",
+                  where: {
+                    PosID: {
+                      [Op.in]: [60104, 60204, 60501, 82923],
+                    },
+                  },
+                },
+              ],
+            },
+          ],
+        },
       ],
     });
 
-    const doctorFormatted = doctors.map((doctors) => {
-      return {
-        userid: doctors.DoctorUserByDoctorLocation?.userid ?? null,
-        doctorid: doctors.doctorid,
-        name: `${doctors.Doctor.doctorsalutation}${doctors.Doctor.doctorname} ${doctors.Doctor.doctorlastname}`,
-        location: doctors.locationid,
-        location_name: doctors.LocationDoctor.detailtext,
-      };
-    });
+    const doctorFormatted = doctors.map((d) => ({
+      userid: d.DoctorUserByDoctorLocation?.DoctorUserId?.userid ?? null,
+      doctorid: d.doctorid,
+      name: `${d.Doctor.doctorsalutation}${d.Doctor.doctorname} ${d.Doctor.doctorlastname}`,
+      location: d.locationid,
+      location_name: d.LocationDoctor?.detailtext,
+    }));
 
     return res.status(200).json({ doctorFormatted });
   } catch (error) {
-    console.log(error);
+    console.error(error);
     return res.status(500).json({ message: error.message });
   }
 };

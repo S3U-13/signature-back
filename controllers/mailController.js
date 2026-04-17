@@ -63,16 +63,187 @@ const { sign } = require("jsonwebtoken");
 //   }
 // };
 
+// exports.warn = async (req, res) => {
+//   const cookie = req.headers.cookie;
+
+//   try {
+//     const userid = req.user.userid;
+//     const doctorid = req.user.doctorid;
+
+//     const where = {
+//       signed_at: null,
+//     };
+
+//     if (doctorid) {
+//       where[Op.or] = [{ userid }, { doctorid }];
+//     } else {
+//       where.userid = userid;
+//     }
+
+//     const actions = await db.FormAction.findAll({
+//       where,
+//       include: [
+//         {
+//           model: db.Form,
+//           attributes: [
+//             "id",
+//             "form_type_id",
+//             "hn",
+//             "creator",
+//             "createdAt",
+//             "updatedAt",
+//           ],
+//           include: [
+//             {
+//               model: db.FormType,
+//               as: "FormTypeName",
+//               attributes: ["form_name"],
+//             },
+//           ],
+//         },
+//       ],
+//       order: [[{ model: db.Form }, "createdAt", "DESC"]],
+//     });
+
+//     // 🔥 เอา creator id ไม่ซ้ำ
+//     const creatorIds = [
+//       ...new Set(actions.map((a) => a.Form?.creator).filter(Boolean)),
+//     ];
+
+//     let personMap = {};
+
+//     if (creatorIds.length > 0) {
+//       const res = await fetch(
+//         `${process.env.API_URL}user/user-ppk-by-userid/${creatorIds.join(",")}`,
+//         { headers: { Cookie: cookie } },
+//       );
+
+//       const json = await res.json();
+
+//       // 🔥 normalize เป็น array เสมอ
+//       const persons = Array.isArray(json.user_data)
+//         ? json.user_data
+//         : json.user_data
+//           ? [json.user_data]
+//           : [];
+
+//       // 🔥 FIX: บังคับ key เป็น string + กัน undefined
+//       personMap = Object.fromEntries(
+//         persons
+//           .filter((p) => p?.userid) // ❗กัน undefined key
+//           .map((p) => [String(p.userid), p]),
+//       );
+//     }
+
+//     const now = new Date();
+
+//     const needSign = actions.map((a) => {
+//       const creatorId = String(a.Form?.creator);
+//       const creator = personMap[creatorId];
+//       const creator_name = creator?.firstname_lastname ?? "ไม่ทราบชื่อ";
+//       const sex = creator?.sex;
+//       role = creator.role;
+
+//       const createdAt = a.Form?.createdAt;
+//       const createdTime = createdAt ? new Date(createdAt) : null;
+
+//       let timeText = "";
+
+//       if (createdTime) {
+//         const diffMs = now - createdTime;
+//         const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+//         const isSameDay =
+//           now.getDate() === createdTime.getDate() &&
+//           now.getMonth() === createdTime.getMonth() &&
+//           now.getFullYear() === createdTime.getFullYear();
+
+//         const isYesterday =
+//           new Date(
+//             now.getFullYear(),
+//             now.getMonth(),
+//             now.getDate() - 1,
+//           ).toDateString() === createdTime.toDateString();
+
+//         // 🟢 วันนี้ → แสดงเวลา
+//         if (isSameDay) {
+//           const hours = createdTime.getHours().toString().padStart(2, "0");
+//           const minutes = createdTime.getMinutes().toString().padStart(2, "0");
+//           timeText = `${hours}:${minutes} น.`;
+//         }
+
+//         // 🟡 เมื่อวาน
+//         else if (isYesterday) {
+//           timeText = "เมื่อวาน";
+//         }
+
+//         // 🔵 วันอื่น → แสดงวันที่แบบไทย
+//         else {
+//           const thaiMonths = [
+//             "ม.ค.",
+//             "ก.พ.",
+//             "มี.ค.",
+//             "เม.ย.",
+//             "พ.ค.",
+//             "มิ.ย.",
+//             "ก.ค.",
+//             "ส.ค.",
+//             "ก.ย.",
+//             "ต.ค.",
+//             "พ.ย.",
+//             "ธ.ค.",
+//           ];
+
+//           const day = createdTime.getDate();
+//           const month = thaiMonths[createdTime.getMonth()];
+
+//           timeText = `${day} ${month}`;
+//         }
+//       }
+
+//       return {
+//         id: a.id,
+//         form_id: a.form_id,
+//         role,
+//         hn: a.Form?.hn,
+//         form_type_id: a.Form?.form_type_id,
+//         form_type_name: a.Form?.FormTypeName?.form_name,
+//         status: a.status,
+//         creator_name,
+//         creator: a.Form?.creator,
+//         by_userid: a.userid,
+//         createdAt,
+//         updatedAt: a.Form?.updatedAt,
+//         sex,
+//         time: timeText, // 👈 ใช้ตัวนี้แทน timeText เดิม
+//       };
+//     });
+
+//     return res.json({
+//       count: needSign.filter((i) => i.status === "pending").length,
+//       notifications: needSign,
+//     });
+//   } catch (error) {
+//     console.error(error);
+//     return res.status(500).json({ message: error.message });
+//   }
+// };
+
 exports.warn = async (req, res) => {
   const cookie = req.headers.cookie;
-
   try {
+    const { type = "pending" } = req.query; // ✅ รับ param
     const userid = req.user.userid;
     const doctorid = req.user.doctorid;
 
-    const where = {
-      signed_at: null,
-    };
+    const where = {};
+
+    // 🔥 filter ตาม type
+    if (type === "pending") {
+      where.status = { [Op.ne]: "signed" };
+    } else if (type === "history") {
+      where.status = "signed";
+    }
 
     if (doctorid) {
       where[Op.or] = [{ userid }, { doctorid }];
@@ -102,10 +273,16 @@ exports.warn = async (req, res) => {
           ],
         },
       ],
-      order: [[{ model: db.Form }, "createdAt", "DESC"]],
+      order:
+        type === "history"
+          ? [["signed_at", "DESC"]]
+          : [[{ model: db.Form }, "createdAt", "DESC"]],
     });
 
-    // 🔥 เอา creator id ไม่ซ้ำ
+    // -----------------------------
+    // 🔽 ส่วน mapping เดิมคุณ (เหมือนเดิม)
+    // -----------------------------
+
     const creatorIds = [
       ...new Set(actions.map((a) => a.Form?.creator).filter(Boolean)),
     ];
@@ -113,72 +290,57 @@ exports.warn = async (req, res) => {
     let personMap = {};
 
     if (creatorIds.length > 0) {
-      const res = await fetch(
+      const response = await fetch(
         `${process.env.API_URL}user/user-ppk-by-userid/${creatorIds.join(",")}`,
         { headers: { Cookie: cookie } },
       );
 
-      const json = await res.json();
+      const json = await response.json();
 
-      // 🔥 normalize เป็น array เสมอ
       const persons = Array.isArray(json.user_data)
         ? json.user_data
         : json.user_data
           ? [json.user_data]
           : [];
 
-      // 🔥 FIX: บังคับ key เป็น string + กัน undefined
       personMap = Object.fromEntries(
-        persons
-          .filter((p) => p?.userid) // ❗กัน undefined key
-          .map((p) => [String(p.userid), p]),
+        persons.filter((p) => p?.userid).map((p) => [String(p.userid), p]),
       );
     }
 
     const now = new Date();
 
-    const needSign = actions.map((a) => {
+    const list = actions.map((a) => {
       const creatorId = String(a.Form?.creator);
       const creator = personMap[creatorId];
+
       const creator_name = creator?.firstname_lastname ?? "ไม่ทราบชื่อ";
       const sex = creator?.sex;
-      role = creator.role;
+      const role = creator?.role;
 
-      const createdAt = a.Form?.createdAt;
-      const createdTime = createdAt ? new Date(createdAt) : null;
+      const baseTime = type === "history" ? a.signed_at : a.Form?.createdAt;
+
+      const timeObj = baseTime ? new Date(baseTime) : null;
 
       let timeText = "";
 
-      if (createdTime) {
-        const diffMs = now - createdTime;
-        const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-
-        const isSameDay =
-          now.getDate() === createdTime.getDate() &&
-          now.getMonth() === createdTime.getMonth() &&
-          now.getFullYear() === createdTime.getFullYear();
+      if (timeObj) {
+        const isSameDay = now.toDateString() === timeObj.toDateString();
 
         const isYesterday =
           new Date(
             now.getFullYear(),
             now.getMonth(),
             now.getDate() - 1,
-          ).toDateString() === createdTime.toDateString();
+          ).toDateString() === timeObj.toDateString();
 
-        // 🟢 วันนี้ → แสดงเวลา
         if (isSameDay) {
-          const hours = createdTime.getHours().toString().padStart(2, "0");
-          const minutes = createdTime.getMinutes().toString().padStart(2, "0");
-          timeText = `${hours}:${minutes} น.`;
-        }
-
-        // 🟡 เมื่อวาน
-        else if (isYesterday) {
+          const h = timeObj.getHours().toString().padStart(2, "0");
+          const m = timeObj.getMinutes().toString().padStart(2, "0");
+          timeText = `${h}:${m} น.`;
+        } else if (isYesterday) {
           timeText = "เมื่อวาน";
-        }
-
-        // 🔵 วันอื่น → แสดงวันที่แบบไทย
-        else {
+        } else {
           const thaiMonths = [
             "ม.ค.",
             "ก.พ.",
@@ -193,11 +355,7 @@ exports.warn = async (req, res) => {
             "พ.ย.",
             "ธ.ค.",
           ];
-
-          const day = createdTime.getDate();
-          const month = thaiMonths[createdTime.getMonth()];
-
-          timeText = `${day} ${month}`;
+          timeText = `${timeObj.getDate()} ${thaiMonths[timeObj.getMonth()]}`;
         }
       }
 
@@ -212,16 +370,17 @@ exports.warn = async (req, res) => {
         creator_name,
         creator: a.Form?.creator,
         by_userid: a.userid,
-        createdAt,
-        updatedAt: a.Form?.updatedAt,
         sex,
-        time: timeText, // 👈 ใช้ตัวนี้แทน timeText เดิม
+        time: timeText,
       };
     });
 
     return res.json({
-      count: needSign.filter((i) => i.status === "pending").length,
-      notifications: needSign,
+      count:
+        type === "pending"
+          ? list.filter((i) => i.status !== "signed").length
+          : list.length,
+      data: list,
     });
   } catch (error) {
     console.error(error);

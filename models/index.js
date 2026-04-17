@@ -272,6 +272,21 @@ db.AppPerson.belongsTo(db.Lookup, {
   as: "Salutation",
 });
 
+db.AppUser.belongsTo(db.AppUsername, {
+  foreignKey: "userid",
+  as: "DoctorUsername",
+});
+
+db.DoctorUser.belongsTo(db.AppUser, {
+  foreignKey: "userid",
+  as: "DoctorUserId",
+});
+
+db.DoctorName.belongsTo(db.DoctorUser, {
+  foreignKey: "doctorid",
+  as: "DoctorUser",
+});
+
 db.DoctorName.belongsTo(db.DoctorFlag, {
   foreignKey: "doctorspecialist",
   as: "Specialist",

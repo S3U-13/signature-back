@@ -221,7 +221,7 @@ exports.brachytherapyConsentFormService = async (id, body, user) => {
       ...(role === "doctor" && { doctorid: user.doctorid }),
     };
 
-    const updated = await db.FormAction.update(
+    const [updated] = await db.FormAction.update(
       {
         status,
         signed_at: new Date(),
@@ -237,6 +237,23 @@ exports.brachytherapyConsentFormService = async (id, body, user) => {
     await checkAndUpdateFormStatus(id, t);
 
     await t.commit();
+
+    // 🔥 หา target คนอื่นในฟอร์มนี้
+    const actions = await db.FormAction.findAll({
+      where: { form_id: id },
+    });
+
+    const targets = actions
+      .map((a) => a.userid)
+      .filter((uid) => uid && uid !== user.userid); // ❗ไม่ยิงให้ตัวเอง
+
+    targets.forEach((uid) => {
+      global.io.to(`user_${uid}`).emit("form-updated", {
+        form_id: id,
+        message: "มีการเซ็นเอกสารแล้ว",
+      });
+    });
+
     return true;
   } catch (error) {
     await t.rollback();

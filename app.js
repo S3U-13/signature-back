@@ -1,6 +1,7 @@
 // app.js
 const express = require("express");
 const cors = require("cors");
+const { Server } = require("socket.io");
 const cookieParser = require("cookie-parser");
 const userRoutes = require("./routes/userRoutes");
 const adminRoutes = require("./routes/adminRoutes");

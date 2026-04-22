@@ -40,6 +40,12 @@ exports.simulationConsentFormService = async (id, body, user) => {
       nurse_sign_date,
       doctor_sign_id,
       doctor_sign_date,
+      //staff note
+      cr,
+      egfr,
+      contrast_media,
+      volume_cc,
+      note,
     } = cleanedBody;
 
     // ประกาศ field สำคัญ ที่ req ต้อง การ
@@ -72,6 +78,7 @@ exports.simulationConsentFormService = async (id, body, user) => {
       staff_sign_existing,
       nurse_sign_existing,
       doctor_sign_existing,
+      staff_note,
     ] = await Promise.all([
       db.PatientContacts.findOne({ where: { form_id: id }, transaction: t }),
       db.ContrastAllergyStatus.findOne({
@@ -96,6 +103,7 @@ exports.simulationConsentFormService = async (id, body, user) => {
       db.StaffSign.findOne({ where: { form_id: id }, transaction: t }),
       db.NurseSign.findOne({ where: { form_id: id }, transaction: t }),
       db.DoctorSign.findOne({ where: { form_id: id }, transaction: t }),
+      db.StaffNote.findOne({ where: { form_id: id }, transaction: t }),
     ]);
 
     // let user_sign_existing = null;
@@ -339,6 +347,30 @@ exports.simulationConsentFormService = async (id, body, user) => {
         );
       }
     }
+    if (staff_note) {
+      await db.StaffNote.update(
+        {
+          cr,
+          egfr,
+          contrast_media,
+          volume_cc,
+          note,
+        },
+        { where: { form_id: id }, transaction: t },
+      );
+    } else {
+      await db.StaffNote.create(
+        {
+          form_id: id,
+          cr,
+          egfr,
+          contrast_media,
+          volume_cc,
+          note,
+        },
+        { transaction: t },
+      );
+    }
     // -------------------------
     // FormAction update
     // -------------------------
@@ -373,10 +405,24 @@ exports.simulationConsentFormService = async (id, body, user) => {
 
     await t.commit();
 
+    const actions = await db.FormAction.findAll({
+      where: { form_id: id },
+    });
+
+    const targets = actions
+      .map((a) => a.userid)
+      .filter((uid) => uid && uid !== user.userid); // ❗ไม่ยิงให้ตัวเอง
+
+    targets.forEach((uid) => {
+      global.io.to(`user_${uid}`).emit("form-updated", {
+        form_id: id,
+        message: "มีการเซ็นเอกสารแล้ว",
+      });
+    });
+
     return true;
   } catch (error) {
     await t.rollback();
-
     throw error;
   }
 };

@@ -29,11 +29,12 @@ exports.pat_visit_by_hn = async (req, res) => {
     const pat_visit = await db.PatVisit.findAll({
       where: {
         hn: hn,
-        visitdatetime: {
-          // [Op.gte]: oneYearAgo,
-          [Op.gte]: elevenMonthAgo,
-        },
+        // visitdatetime: {
+        //   // [Op.gte]: oneYearAgo,
+        //   // [Op.gte]: elevenMonthAgo,
+        // },
       },
+      order: [["visitdatetime", "DESC"]],
     });
     return res.status(200).json(pat_visit);
   } catch (error) {

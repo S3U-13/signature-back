@@ -180,7 +180,7 @@ exports.search_hn_form_list = async (req, res) => {
 };
 
 // create create_form_by_doc
-exports.crate_form_by_doc = async (req, res) => {
+exports.crate_form = async (req, res) => {
   const t = await sequelize.transaction();
   const userId = req.user.userid;
   try {
@@ -193,7 +193,6 @@ exports.crate_form_by_doc = async (req, res) => {
       vitalsign_id,
       disease,
       lmp,
-      consent,
       doctor_sign,
       doctor_sign_date,
       doctor_id,
@@ -222,7 +221,7 @@ exports.crate_form_by_doc = async (req, res) => {
         vitalsign_id,
         disease,
         lmp,
-        consent,
+        consent: null,
         doctor_id,
         doctor_userid: doctor_user.userid,
         staff_id,
@@ -323,6 +322,7 @@ exports.show_pat_form_by_form_id = async (req, res) => {
       staff_sign,
       doctor_sign,
       nurse_sign,
+      staff_note,
     ] = await Promise.all([
       db.Form.findOne({
         where: { id: id },
@@ -343,6 +343,7 @@ exports.show_pat_form_by_form_id = async (req, res) => {
       db.StaffSign.findOne({ where: { form_id: id } }),
       db.DoctorSign.findOne({ where: { form_id: id } }),
       db.NurseSign.findOne({ where: { form_id: id } }),
+      db.StaffNote.findOne({ where: { form_id: id } }),
     ]);
 
     const UserSignMapById = {
@@ -567,6 +568,7 @@ exports.show_pat_form_by_form_id = async (req, res) => {
         doctor_user: doctor_user.user_data ?? null,
         staff_user: staff_user.user_data ?? null,
         nurse_user: nurse_user.user_data ?? null,
+        staff_note: staff_note ?? null,
       },
       data_pat: {
         pat: pat ?? {},

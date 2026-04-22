@@ -238,6 +238,8 @@ exports.brachytherapyConsentFormService = async (id, body, user) => {
 
     await t.commit();
 
+    const isSigning = status === "signed";
+
     // 🔥 หา target คนอื่นในฟอร์มนี้
     const actions = await db.FormAction.findAll({
       where: { form_id: id },
@@ -248,10 +250,19 @@ exports.brachytherapyConsentFormService = async (id, body, user) => {
       .filter((uid) => uid && uid !== user.userid); // ❗ไม่ยิงให้ตัวเอง
 
     targets.forEach((uid) => {
-      global.io.to(`user_${uid}`).emit("form-updated", {
-        form_id: id,
-        message: "มีการเซ็นเอกสารแล้ว",
-      });
+      if (isSigning) {
+        // ✍️ มีการเซ็น
+        global.io.to(`user_${uid}`).emit("form-progress", {
+          form_id: id,
+          message: "มีการเซ็นเอกสารแล้ว",
+        });
+      } else {
+        // 💾 แค่ save
+        global.io.to(`user_${uid}`).emit("form-saved", {
+          form_id: id,
+          message: "มีการบันทึกข้อมูลในเอกสาร",
+        });
+      }
     });
 
     return true;

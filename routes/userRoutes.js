@@ -8,6 +8,7 @@ const userController = require("../controllers/userController");
 const manageStaffController = require("../controllers/manageStaffController");
 const addSignatureController = require("../controllers/addSignatureController");
 const mailController = require("../controllers/mailController");
+const pdfController = require("../controllers/pdfController");
 
 // const apiLogger = require("../middleware/apiLogger");
 const {
@@ -48,8 +49,8 @@ router.get(
 );
 
 router.post(
-  "/doc-create-form-radio-therapy",
-  formRadioTherapyController.crate_form_by_doc,
+  "/create-form-radio-therapy",
+  formRadioTherapyController.crate_form,
 );
 
 router.put(
@@ -95,5 +96,11 @@ router.post("/confirm-signature", addSignatureController.getSignatureInForm);
 //warn
 router.get("/count-warn", mailController.warn);
 router.put("/change-status-warn/:id", mailController.change_status_warn);
+
+//pdf
+router.post("/generate-pdf/:form_id", pdfController.generatePdf);
+router.get("/get-pdf/:form_id", pdfController.getPdf);
+router.get("/list-pdf", pdfController.list);
+router.delete("/cancel-pdf/:form_id", pdfController.cancel);
 
 module.exports = router;

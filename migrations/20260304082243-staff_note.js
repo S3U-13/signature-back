@@ -16,6 +16,10 @@ module.exports = {
         autoIncrement: true,
         type: Sequelize.INTEGER,
       },
+      form_id: {
+        allowNull: true,
+        type: Sequelize.INTEGER,
+      },
       cr: {
         allowNull: true,
         type: Sequelize.STRING,

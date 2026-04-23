@@ -9,38 +9,30 @@ module.exports = {
         autoIncrement: true,
         primaryKey: true,
       },
+
       form_id: {
         type: Sequelize.INTEGER,
         allowNull: false,
       },
+
       file_name: {
         type: Sequelize.STRING,
         allowNull: false,
       },
 
-      file_url: {
-        type: Sequelize.STRING,
+      // 🔥 เก็บไฟล์จริงใน DB
+      file_data: {
+        type: Sequelize.BLOB("long"), // long = รองรับไฟล์ใหญ่
         allowNull: false,
-      },
-
-      file_size: {
-        type: Sequelize.INTEGER,
-        allowNull: true,
       },
 
       mime_type: {
         type: Sequelize.STRING,
-        allowNull: true,
         defaultValue: "application/pdf",
       },
 
-      ref_id: {
+      file_size: {
         type: Sequelize.INTEGER,
-        allowNull: true,
-      },
-
-      ref_type: {
-        type: Sequelize.STRING,
         allowNull: true,
       },
 
@@ -70,12 +62,6 @@ module.exports = {
   },
 
   async down(queryInterface, Sequelize) {
-    /**
-     * Add reverting commands here.
-     *
-     * Example:
-     * await queryInterface.dropTable('users');
-     */
     await queryInterface.dropTable("pdf");
   },
 };

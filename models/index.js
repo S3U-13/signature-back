@@ -192,6 +192,11 @@ db.StaffNote.belongsTo(db.Form, {
   foreignKey: "form_id",
 });
 
+db.Form.belongsTo(db.Option, {
+  foreignKey: "consent",
+  as: "ConsentName"
+});
+
 // pat
 
 db.Pat.belongsTo(db.Lookup, {

@@ -328,6 +328,7 @@ exports.show_pat_form_by_form_id = async (req, res) => {
         where: { id: id },
         include: [
           { model: db.FormType, as: "FormTypeName", attributes: ["form_name"] },
+          { model: db.Option, as: "ConsentName", attributes: ["name"] },
         ],
       }),
       db.PatientContacts.findOne({

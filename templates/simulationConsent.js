@@ -1,38 +1,46 @@
-module.exports = (data) => {
+const { CalculateAge } = require("../utils/calculateAge");
+
+module.exports = (data, option) => {
   const form_type = data?.data_form?.form?.FormTypeName?.form_name ?? null;
+  const hn = data?.data_pat?.pat?.hn ?? null;
   const pat_name = data.data_pat.pat
     ? `${data.data_pat.pat.prename}${data.data_pat.pat.firstname} ${data.data_pat.pat.lastname}`
     : null;
+  const pat_weight = data?.data_pat?.pat_vitalsign?.weight ?? null;
   const relation = data?.data_form?.patient_contact?.relation_name ?? null;
-  const patient_contact_name = data?.data_pat?.patient_contact?.name ?? null;
+  const patient_contact_name = data?.data_form?.patient_contact?.name ?? null;
   const disease = data?.data_form?.form?.disease ?? null;
   const consent_id = data?.data_form?.form?.consent ?? null;
-  const consent_name = data?.data_form?.form?.ConsentName?.name ?? null;
+  const consent = data?.data_form?.form?.consent ?? null;
   const lmp = data?.data_form?.form?.lmp ?? null;
+
+  const pat_agn = data?.data_pat?.pat?.birthdatetime
+    ? CalculateAge(data?.data_pat?.pat?.birthdatetime)
+    : null;
 
   //map congenital_disease
   const congenital_disease = data?.data_form?.congenital_disease ?? [];
 
   //contrast_history_status
   const contrast_history_status =
-    data?.data_form?.contrast_history_status ?? null;
+    data?.data_form?.contrast_history_status?.contrast_history_id ?? null;
 
   //contrast_allergy_status
   const contrast_allergy_id =
     data?.data_form?.contrast_allergy_status?.contrast_allergy_id ?? null;
   const contrast_allergy_symptom =
-    data?.data_form?.contrast_allergy_status?.contrast_allergy_symptom ?? null;
+    data?.data_form?.contrast_allergy_status?.contrast_allergy_symptom ?? "";
 
   //seafood_allergy_status
   const seafood_allergy_id =
     data?.data_form?.seafood_allergy_status?.seafood_allergy_id ?? null;
   const seafood_allergy_symptom =
-    data?.data_form?.seafood_allergy_status?.seafood_allergy_symptom ?? null;
+    data?.data_form?.seafood_allergy_status?.seafood_allergy_symptom ?? "";
 
   //drug_allergy_status
   const drug_allergy_id =
     data?.data_form?.drug_allergy_status?.drug_allergy_id ?? null;
-  const drug = data?.data_form?.drug_allergy_status?.drug ?? null;
+  const drug = data?.data_form?.drug_allergy_status?.drug ?? "";
 
   //signature
   const patient_sign = data?.data_form?.patientsign?.patient_sign ?? null;
@@ -42,11 +50,78 @@ module.exports = (data) => {
   const doctor_sign = data?.data_form?.doctorsign?.doctor_sign ?? null;
 
   //doctor nurse staff name
-  const staff_name = data?.data_form?.staff_user?.person_name ?? null;
-  const nurse_name = data?.data_form?.nurse_user?.person_name ?? null;
+  const staff_name = data?.data_form?.staff_user[0]?.person_name ?? null;
+  const staff_position = data?.data_form?.staff_user[0]?.position ?? null;
+  const nurse_name = data?.data_form?.nurse_user[0]?.person_name ?? null;
   const doctor_name = data?.data_form?.doctor_user?.person_name ?? null;
 
-  const mapCongenitalDisease = congenital_disease?.map((i) => i.condition_id);
+  //option
+  const choice1 = option.filter((i) => i.option_group_id === 7); // คำถามโรคประจำตัว
+
+  const choice_group_1 = option.filter((i) => i.option_group_id === 1); // ตัวเลือก เคย , ไม่เคย , จำไม่ได้
+  const choice_group_2 = option.filter((i) => i.option_group_id === 2); // ตัวเลือก เคย , ไม่เคย , จำไม่ได้
+
+  const choice_group_3 = option.filter((i) => i.option_group_id === 3); // ตัวเลือก มี , ไม่มี , จำไม่ได้
+
+  const choice_group_4 = option.filter((i) => i.option_group_id === 4); // คำถามหมวดยินยอมโดยการใช้รังสีเอกซเรย์เเละสารทึบรังสี
+
+  //note
+  const cr = data?.data_form?.staff_note?.cr ?? "-";
+  const egfr = data?.data_form?.staff_note?.egfr ?? "-";
+  const contrast_media = data?.data_form?.staff_note?.contrast_media ?? "-";
+  const volume_cc = data?.data_form?.staff_note?.volume_cc ?? "-";
+  const note = data?.data_form?.staff_note?.note ?? "-";
+
+  //map
+  const selectedDiseaseIds = congenital_disease?.map((i) => i.condition_id);
+
+  const renderCheckbox = (checked) =>
+    checked ? "☑ มี ☐ ไม่มี" : "☐ มี ☑ไม่มี";
+
+  const renderCheckbox2 = (checked) => (checked ? "☑" : "☐");
+
+  const congenitalHTML = choice1
+    .map((item) => {
+      const isChecked = selectedDiseaseIds.includes(item.id);
+
+      return `
+      <div class="grid grid-cols-[100px_auto] items-center">
+        <span>${item.name}</span>
+        <span>${renderCheckbox(isChecked)}</span>
+      </div>
+    `;
+    })
+    .join("");
+
+  const renderOptions = (choices, selectedId) =>
+    choices
+      .map((item) => {
+        const isChecked = selectedId === item.id;
+        return `
+        <div class="grid grid-cols-[auto_1fr] gap-2">
+          <span>${renderCheckbox2(isChecked)}</span>
+          <span>${item.name}</span>
+        </div>
+      `;
+      })
+      .join("");
+
+  const contrastHistoryHTML = renderOptions(
+    choice_group_2,
+    contrast_history_status,
+  );
+
+  const contrastAllergyHTML = renderOptions(
+    choice_group_2,
+    contrast_allergy_id,
+  );
+
+  const seafoodAllergyHTML = renderOptions(choice_group_1, seafood_allergy_id);
+
+  const drugAllergyHTML = renderOptions(choice_group_3, drug_allergy_id);
+
+  const consentHTML = renderOptions(choice_group_4, consent);
+
   return `
     <!DOCTYPE html>
     <html lang="en">
@@ -57,45 +132,192 @@ module.exports = (data) => {
         <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     </head>
     <body>
-        <h1 class="text-sm font-semibold">${form_type}</h1>
-        <p>Diagnosis: </p>
-        <p>ข้าพเจ้า ชื่อ ${patient_contact_name}</p>
-        <p>มีความสัมพันธ์เป็น ${relation} เกี่ยวข้องกับผู้ป่วย</p>
-        <p>ชื่อ ${pat_name}</p>
-        <p>เจ็บป่วยด้วยโรคมะเร็ง ปากมดลูก/มดลูก/${disease}</p>
-        <p>จะต้องเข้ารับการรักษาด้วยการใส่เเร่</p>
-        <p>ผู้ให้ข้อมูล ${doctor_sign}</p>
-        <p>(${doctor_name})</p>
-        <p>ตำเเหน่งเเพทย์</p>
-        <p>ผู้ให้คำยินยอม ${patient_sign}</p>
-        <p>(${pat_name})</p>
-        <p>ผู้ป่วย หรือ ผู้เเทนโดยชอบด้วยกฏหมาย</p>
-        <p>พยานฝ่ายผู้ป่วย ${witness_sign}</p>
-        <p>(${patient_contact_name})</p>
-        <p>checkbox ไม่มีพยาบาลฝ่ายผู้ป่วย(เนื่องจากผู้ป่วยมาคนเดียว)</p>
-        <p>พยานฝ่ายเจ้าหน้าที่${nurse_sign}</p>
-        <p>(${nurse_name})</p>
-        <p>ตำแหน่ง พยาบาล/ผู้ช่วยพยาบาล</p>
-        <p>พยานฝ่ายเจ้าหน้าที่${staff_sign}</p>
-        <p>(${staff_name})</p>
-        <p>ตำแหน่ง ผู้ช่วยพยาบาล</p>
+        <h1 class="text-sm font-semibold text-center">หนังสืออธิบายเเละยินยอมให้ทำการจำลองการฉายรังสีโดยใช้รังสีเอกซเรย์เเละสารทึบรังสี</h1>
 
+        <section class="flex items-start justify-between gap-2">
+          <div class="space-y-3.5 w-full mt-2">
 
-        <p>1.ท่านมีโรคประจำตัวดคงต่อไปนี้หรือไม่</p>
-        <p>${mapCongenitalDisease}</p>
-        <p>2.ท่านเคยได้รับการฉีดสารทึบรังสีมาก่อนหรือไม่</p>
-        <p>${contrast_history_status}</p>
-        <p>3.ถ้าเคยตรวจท่านเเพ้สารทึบรังสีหรือไม่</p>
-        <p>${contrast_allergy_id}</p>
-        <p>${contrast_allergy_symptom}</p>
-        <p>4.ท่านมีประวัติเเพ้อาหารทะเลหรือไม่</p>
-        <p>${seafood_allergy_id}</p>
-        <p>5.ท่านมีประวัติเเพ้ยาอื่นๆอีกหรือไม่</p>
-        <p>${drug_allergy_id}</p>
-        <p>${drug}</p>
-        <p>6.ข้าพเจ้าขอรับรองว่าไม่ได้อยู่ในระหว่างตั้งครรภ์ ขณะได้รับการตรวจด้วยวิธีดังกล่าว</p>
-        <p>(โดยประจำเดือนมาครั้งสุดท้ายวันที่ ${lmp})</p>
+            <p class="text-sm text-center pl-35 font-semibold">หน่วยงานรังสีรักษาโรงพยาบาลพระปกเกล้า</p>
+            <div class="text-sm flex items-center">
+              <p>ชื่อ-สกุล ผู้ป่วย 
+                <p class="border-b border-dotted w-45 px-1">${pat_name}</p>
+              </p>
+              <p>อายุ 
+                <p class="border-b border-dotted w-15 px-1 text-center">${pat_agn}</p> ปี
+              </p>
+              <p class="pl-2"> HN 
+                <p class="border-b border-dotted w-25 px-1">${hn}</p>
+              </p>
+            </div> 
+            <div class="text-sm flex items-center">
+              <p>วันที่ตรวจ
+                <p class="border-b border-dotted w-35 px-1">-</p>
+              </p>
+              <p>
+                น้ำหนัก
+                  <p class="border-b border-dotted w-20 px-1 text-center">${pat_weight}</p>
+                กิโลกรัม
+              </p>
+            </div> 
+          </div>
+          <div class="text-xs border p-1 pb-2 w-70 space-y-1">
+            <p>สำหรับเจ้าหน้าที่</p>
+            <div class="flex items-center gap-2">
+              <div class="flex">
+                <p>Cr</p>
+                <p class="border-b border-dotted w-16 px-1">${cr}</p>
+              </div>
+              <div class="flex">
+                <p>eGFR</p>
+                <p class="border-b border-dotted w-16 px-1">${egfr}</p>
+              </div>
+            </div>
+            <p>(ต้องมี Cr ≤ 1.5 mg%, eGFR ≥ 45)</p>
+            <div class="flex">
+              <p>
+                Contrast media   
+              </p>
+              <span class="border-b border-dotted w-25 px-1">${contrast_media}</span>
+            </div>
+            <div class="flex">
+              <p>ปริมาณ</p>
+              <p class="border-b border-dotted w-30 px-1">${volume_cc}</p>
+              <p>CC</p>
+            </div>
+          </div>
+        </section>     
+
+        <section class="text-sm space-y-2 mt-2">
+          <p class="indent-8">
+            ท่านกำลังจะเข้ารับการตรวจทางรังสีโดยใช้รังสีเอกซเรย์ หรือการฉีดสารทึบรังสีร่วมกับการเอกซเรย์ ซึ่งในการตรวจนี้เเพทย์/เจ้าหน้าที่จะใช้สารทึบรังสีฉีดผ่านทางหลอดเลือดดำ หลังจากนั้นจึงเอกซเรย์ ในการตรวจดังกล่าว อาจมีโอกาสเกิดการเเพ้ต่อสารทึบรังสีได้ดังนี้
+          </p>
+          <p class="indent-8">
+            1. เเพ้เล็กน้อย ได้เเก่ คลื่นไส้/อาเจียน จาม ผื่นคัน มีไข้
+          </p>
+          <p class="indent-8">
+            2.เเพ้ปานกลางถึงมาก ได้เเก่ หายใจขัด ความดันโลหิตต่ำ หัวใจเต้นช้า หน้าบวม ปากบวม กล่องเสียงบวม ไตวาย ชัก หรืออาจเสียชีวิตได้ อย่างไรก็ตามทางหน่วยงานรังสีรักษาได้ตามมาตรการในการป้องกันเเละรักษาอาการเเพ้ที่เกิดจากการตรวจดังกล่าว ทั้งนี้เพื่อป้องกันอันตรายที่อาจเกิดขึ้น กรุณาตอบคำถามต่อไปนี้ เพื่อตรวจหาความเสี่ยงต่อการเอกซเรย์หรือฉีดสารทึบรังสี
+          </p>
+        </section>
+
+        <section>
+          <div class="text-sm space-y-2 mt-2">
+              <div>
+              <p class="pl-8">1.ท่านมีโรคประจำตัวดังต่อไปนี้หรือไม่</p>
+              <div class="pl-16 grid grid-cols-2 gap-2">
+                ${congenitalHTML}
+              </div>
+              <div>
+              </div>
+              <p class="pl-8">2.ท่านเคยได้รับการฉีดสารทึบรังสีมาก่อนหรือไม่</p>
+              <div class="pl-16 flex item-center gap-2">
+                ${contrastHistoryHTML}
+              </div>
+              </div>
+              <div>
+              <p class="pl-8">3.ถ้าเคยตรวจท่านเเพ้สารทึบรังสีหรือไม่</p>
+              <div class="pl-16 flex item-center gap-2">
+                ${contrastAllergyHTML}
+                <p>${contrast_allergy_symptom}</p>
+              </div>
+              </div>
+              <div>
+              <p class="pl-8">4.ท่านมีประวัติเเพ้อาหารทะเลหรือไม่</p>
+              <div class="pl-16 flex item-center gap-2">
+                ${seafoodAllergyHTML}
+                <p>${seafood_allergy_symptom}</p>
+              </div>
+              </div>
+              <div>
+              <p class="pl-8">5.ท่านมีประวัติเเพ้ยาอื่นๆอีกหรือไม่</p>
+              <div class="pl-16 flex item-center gap-2">
+                ${drugAllergyHTML}
+                <p>${drug}</p>
+              </div>
+              </div>
+              <div>
+              <p class="pl-8">6.ข้าพเจ้าขอรับรองว่าไม่ได้อยู่ในระหว่างตั้งครรภ์ ขณะได้รับการตรวจด้วยวิธีดังกล่าว</p>
+              <p class="pl-16">(โดยประจำเดือนมาครั้งสุดท้ายวันที่ ${lmp})</p>
+              </div>
+          </div>
+        </section>
        
+        <section class="text-sm space-y-2 mt-2">
+          <div class="flex ">
+            <p>ข้าพเจ้า <p class="border-b border-dotted px-1 w-55">${patient_contact_name}</p>ผู้ป่วย/ตัวเเทนผู้ป่วย</p>
+            <p>โดยเกี่ยวข้องเป็น <p class="border-b border-dotted px-1 w-35">${relation}</p>ของผู้ป่วย</p>
+          </div>
+          <div class="flex">
+            <p>ชื่อ <p class="border-b border-dotted px-1">${pat_name}</p></p>
+            <p>ได้รับทราบคำอธิบายข้างต้น รวมทั้งผลเเทรกซ้อนที่อาจจะเกิดขึ้นจากการตรวจดังกล่าว โดยข้าพเจ้า</p>
+          </div>
+          <div class="flex justify-center gap-6">
+            ${consentHTML} จึงได้ลงลายมือชื่อไว้เป็นหลักฐาน
+          </div>
+        </section>
+
+        <section class="text-sm grid grid-cols-2 gap-8 mt-2 items-end">
+            <div class="p-2 border relative h-50">
+              <p>สำหรับเจ้าหน้าที่</p>
+              <p>บันทึก(กรณีผู้ป่วยเเพ้สารทึบรังสี)</p>
+              <p>..........................................................................................................</p>
+              <p>..........................................................................................................</p>
+              <p>..........................................................................................................</p>
+              <div class="absolute right-2">
+                <div class="flex items-end gap-2">
+                  <p>ลงชื่อ</p> <img class="w-25 h-10 border-b border-dotted" src="${staff_sign}"/>
+                </div>
+                <div class="flex">
+                  <span>(</span><p class="border-b border-dotted">${staff_name}</p><span>)</span>
+                </div>
+                <div class="flex">
+                  <p>ตำเเหน่ง</p>
+                  <p class="px-1 border-b border-dotted">${staff_position}</p>
+                </div>
+              </div>
+            </div>
+            <div>
+              <div>
+                <div class="flex items-end gap-2">
+                  <p>ลงชื่อ</p> <img class="w-25 h-10 border-b border-dotted" src="${patient_sign}"/>
+                  <p>ผู้ป่วย/ตัวเเทนผู้เเทน</p>
+                </div>
+                <div class="flex pl-10">
+                  <span>(</span><p class="border-b border-dotted">${pat_name}</p><span>)</span>
+                </div>
+              </div>
+              <div>
+                <div class="flex items-end gap-2">
+                  <p>ลงชื่อ</p> <img class="w-25 h-10 border-b border-dotted" src="${staff_sign}"/>
+                  <p>นักรังสีการเเพทย์</p>
+                </div>
+                <div class="flex pl-10">
+                  <span>(</span><p class="border-b border-dotted">${staff_name}</p><span>)</span>
+                </div>
+              </div>
+              <div>
+                <div class="flex items-end gap-2">
+                  <p>ลงชื่อ</p> <img class="w-25 h-10 border-b border-dotted" src="${nurse_sign}"/>
+                  <p>พยาบาล</p>
+                </div>
+                <div class="flex pl-10">
+                  <span>(</span><p class="border-b border-dotted">${nurse_name}</p><span>)</span>
+                </div>
+              </div>
+              <div>
+                <div class="flex items-end gap-2">
+                  <p>ลงชื่อ</p> <img class="w-25 h-10 border-b border-dotted" src="${doctor_sign}"/>
+                  <p>เเพทย์</p>
+                </div>
+                <div class="flex pl-10">
+                  <span>(</span><p class="border-b border-dotted">${doctor_name}</p><span>)</span>
+                </div>
+              </div>
+              <div class="flex">
+                <p>วันที่</p>
+                <p class="w-40 border-b border-dotted">-</p>
+              </div>
+            </div>
+        </section>    
     </body>
   `;
 };

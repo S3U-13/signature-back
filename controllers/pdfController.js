@@ -22,6 +22,12 @@ exports.generatePdf = async (req, res) => {
     //     },
     //   ],
     // });
+    const options = await db.Option.findAll({
+      attributes: ["id", "option_group_id", "name", "flag_status"],
+      include: [
+        { model: db.OptionGroup, as: "OptionGroupName", attributes: ["name"] },
+      ],
+    });
     const form = await fetch(
       `${process.env.API_URL}user/form-by-id/${form_id}`,
       { headers: { Cookie: cookie } },
@@ -72,7 +78,7 @@ exports.generatePdf = async (req, res) => {
     }
 
     // 3. สร้าง HTML
-    const html = templateFn(form);
+    const html = templateFn(form, options);
 
     // 🔥 4. generate PDF → เป็น buffer (ไม่ต้อง save file)
     const browser = await puppeteer.launch({
@@ -92,10 +98,10 @@ exports.generatePdf = async (req, res) => {
       printBackground: true,
       preferCSSPageSize: true,
       margin: {
-        top: "20mm",
-        bottom: "20mm",
-        left: "15mm",
-        right: "15mm",
+        top: "10mm",
+        bottom: "10mm",
+        left: "10mm",
+        right: "10mm",
       },
     });
 
@@ -262,5 +268,80 @@ exports.cancel = async (req, res) => {
     return res.status(200).json({ message: "deleted" });
   } catch (err) {
     return res.status(500).json({ message: "error" });
+  }
+};
+
+exports.previewPdf = async (req, res) => {
+  const cookie = req.headers.cookie;
+  const { form_id } = req.params;
+
+  try {
+    // 1. ดึง option
+    const optionData = await db.Option.findAll({
+      attributes: ["id", "option_group_id", "name", "flag_status"],
+      include: [
+        { model: db.OptionGroup, as: "OptionGroupName", attributes: ["name"] },
+      ],
+    });
+
+    // 2. ดึง form
+    const form = await fetch(
+      `${process.env.API_URL}user/form-by-id/${form_id}`,
+      { headers: { Cookie: cookie } },
+    ).then((res) => res.json());
+
+    if (!form) {
+      return res.status(404).json({ message: "Form not found" });
+    }
+
+    // 3. เลือก template
+    const form_type_id = form.data_form.form.form_type_id;
+    const templateFn = templateMap[form_type_id];
+
+    if (!templateFn) {
+      return res.status(400).json({ message: "No template of this form type" });
+    }
+
+    // 4. render HTML
+    const html = templateFn(form, optionData);
+
+    // 🔥 DEBUG: ดู HTML ก่อนก็ได้
+    // return res.send(html);
+
+    // 5. สร้าง PDF
+    const browser = await puppeteer.launch({
+      args: ["--no-sandbox", "--disable-setuid-sandbox"],
+    });
+
+    const page = await browser.newPage();
+
+    await page.setContent(html, {
+      waitUntil: "networkidle0",
+    });
+
+    const pdfBuffer = await page.pdf({
+      format: "A4",
+      printBackground: true,
+      preferCSSPageSize: true,
+      margin: {
+        top: "10mm",
+        bottom: "10mm",
+        left: "10mm",
+        right: "10mm",
+      },
+    });
+
+    await browser.close();
+
+    // 6. ส่ง preview กลับ (ไม่ save)
+    res.set({
+      "Content-Type": "application/pdf",
+      "Content-Disposition": "inline; filename=preview.pdf",
+    });
+
+    return res.send(pdfBuffer);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: err.message });
   }
 };

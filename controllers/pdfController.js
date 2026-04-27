@@ -5,6 +5,8 @@ const fs = require("fs");
 const path = require("path");
 const templateMap = require("../templates");
 const { generateChecksum } = require("../utils/checksum");
+const fontPath = path.join(__dirname, "../fonts/THSarabun.ttf");
+const fontBase64 = fs.readFileSync(fontPath).toString("base64");
 
 exports.generatePdf = async (req, res) => {
   const cookie = req.headers.cookie;
@@ -303,7 +305,7 @@ exports.previewPdf = async (req, res) => {
     }
 
     // 4. render HTML
-    const html = templateFn(form, optionData);
+    const html = templateFn(form, optionData, fontBase64);
 
     // 🔥 DEBUG: ดู HTML ก่อนก็ได้
     // return res.send(html);
@@ -319,13 +321,15 @@ exports.previewPdf = async (req, res) => {
       waitUntil: "networkidle0",
     });
 
+    await page.evaluateHandle("document.fonts.ready");
+
     const pdfBuffer = await page.pdf({
       format: "A4",
       printBackground: true,
       preferCSSPageSize: true,
       margin: {
-        top: "10mm",
-        bottom: "10mm",
+        top: "15mm",
+        bottom: "15mm",
         left: "10mm",
         right: "10mm",
       },

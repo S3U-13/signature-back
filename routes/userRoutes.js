@@ -99,7 +99,7 @@ router.put("/change-status-warn/:id", mailController.change_status_warn);
 
 //pdf
 router.post("/generate-pdf/:form_id", pdfController.generatePdf);
-router.get("/pre-view-generate-pdf/:form_id", pdfController.previewPdf);
+router.get("/preview-generate-pdf/:form_id", pdfController.previewPdf);
 router.get("/get-pdf/:id", pdfController.getPdf);
 router.get("/list-pdf", pdfController.list);
 router.delete("/cancel-pdf/:id", pdfController.cancel);

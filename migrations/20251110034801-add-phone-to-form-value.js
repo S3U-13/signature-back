@@ -314,7 +314,7 @@ module.exports = {
         type: Sequelize.INTEGER,
       },
       contrast_history_id: {
-        allowNull: false,
+        allowNull: true,
         type: Sequelize.INTEGER,
       },
       flag_status: {
@@ -343,7 +343,7 @@ module.exports = {
         type: Sequelize.INTEGER,
       },
       contrast_allergy_id: {
-        allowNull: false,
+        allowNull: true,
         type: Sequelize.INTEGER,
       },
       contrast_allergy_symptom: {
@@ -376,7 +376,7 @@ module.exports = {
         type: Sequelize.INTEGER,
       },
       seafood_allergy_id: {
-        allowNull: false,
+        allowNull: true,
         type: Sequelize.INTEGER,
       },
       seafood_allergy_symptom: {
@@ -410,7 +410,7 @@ module.exports = {
         type: Sequelize.INTEGER,
       },
       drug_allergy_id: {
-        allowNull: false,
+        allowNull: true,
         type: Sequelize.INTEGER,
       },
       drug: {
@@ -443,7 +443,7 @@ module.exports = {
         type: Sequelize.INTEGER,
       },
       drug_allergy_id: {
-        allowNull: false,
+        allowNull: true,
         type: Sequelize.INTEGER,
       },
       drug: {

@@ -18,6 +18,7 @@ const Form = sequelize.define(
     creator: DataTypes.INTEGER,
     form_status: DataTypes.STRING,
     flag_status: DataTypes.STRING,
+    date_form: DataTypes.DATE,
   },
   {
     modelName: "Form",

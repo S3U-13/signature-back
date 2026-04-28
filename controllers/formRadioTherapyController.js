@@ -199,6 +199,7 @@ exports.crate_form = async (req, res) => {
       staff_id,
       nurse_id,
       viewer,
+      date_form,
     } = cleanedBody;
 
     const requiredFields = ["hn", "form_type_id"];
@@ -228,6 +229,7 @@ exports.crate_form = async (req, res) => {
         nurse_id,
         viewer,
         creator: userId,
+        date_form,
       },
       { transaction: t },
     );

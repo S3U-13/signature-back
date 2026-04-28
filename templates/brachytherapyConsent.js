@@ -23,7 +23,6 @@ module.exports = (data, option, fontBase64) => {
   const nurse_name = data?.data_form?.nurse_user[0]?.person_name ?? null;
   const doctor_name = data?.data_form?.doctor_user?.person_name ?? null;
 
-
   return `
   <!DOCTYPE html>
   <html lang="en">
@@ -65,13 +64,13 @@ module.exports = (data, option, fontBase64) => {
           <div class="flex">
             <div class="flex">
               <p>ชื่อ</p>
-              <p class="w-50 relative inline-block px-2">${pat_name}
+              <p class="w-40 relative inline-block px-2">${pat_name}
                <span class="absolute left-0 right-0 bottom-1 border-b border-dotted"></span>
               </p>
             </div>
             <div class="flex">
               <p>เจ็บป่วยด้วยโรคมะเร็ง ปากมดลูก/มดลูก/</p>
-              <p class="w-35 relative inline-block px-2">${disease}
+              <p class="w-30 relative inline-block px-2">${disease}
                <span class="absolute left-0 right-0 bottom-1 border-b border-dotted"></span>
               </p>
               <p>จะต้องเข้ารับการรักษาด้วยการใส่เเร่</p>
@@ -107,8 +106,11 @@ module.exports = (data, option, fontBase64) => {
             ในผลอันไม่พึงประสงค์ที่อาจเกิดขึ้นจากการรักษาดังกล่าว
           </p>
         </section>
-        <section class="text-lg">
-          <p>การลงนาม</p>
+    
+        <section class="text-lg space-y-4">
+        <p class="text-xl text-center">การลงลายมือชื่อ</p>
+        <div class="flex justify-end">
+          <div>
             <div class="flex items-center gap-1">
               <p>ผู้ให้ข้อมูล</p>
               <div class="grid grid-cols-1 gap-1">
@@ -194,6 +196,8 @@ module.exports = (data, option, fontBase64) => {
               </div>
               <p>ตำแหน่ง${staff_position}</p>
             </div>
+          </div>
+        </div>
         </section>
       </div>  
   </body>

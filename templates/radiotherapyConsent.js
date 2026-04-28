@@ -58,7 +58,8 @@ module.exports = (data, option, fontBase64) => {
   </head>
   <body>
     <div class="space-y-6">
-      <h1 class="text-xl font-semibold text-center">${form_type}</h1>
+      <h1 class="text-xl font-semibold text-center">${form_type}โรงพยาบาลพระปกเกล้า</h1>
+      <p class="text-lg text-right">วันที่................................</p>
       <section class="text-lg space-y-2">
         <div class="flex">
           <div class="flex">
@@ -107,18 +108,18 @@ module.exports = (data, option, fontBase64) => {
            เเละ ภาวะเเทรกซ้อนที่อาจเกิดจากการรักษาด้วยรังสี
            ทั้งที่อาจเกิดระหว่างการฉายรังสี
           </p>
-          <p class="indent-8 mt-12">
+          <p class="indent-8">
             ข้าพเจ้าเเละผู้เทนของข้าพเจ้าเข้าใจถึงข้อมูลอันเป็นประโยชน์ดังกล่าว
            เเละซักถามข้อมูลอันเป็นประโยชน์ต่อการตัดสินใจได้ครบถ่วนเเล้ว
           </p>
-        </section>
-        <section>
           <div class="text-lg">
             ${consentHTML}
           </div>
-        </section>
+      </section>
       <section class="text-lg">
-        <p>การลงนาม</p>
+        <p class="text-xl text-center">การลงลายมือชื่อ</p>
+        <div class="flex justify-end">
+          <div>
           <div class="flex items-center gap-1">
             <p>ผู้ให้ข้อมูล</p>
             <div class="grid grid-cols-1 gap-1">
@@ -201,6 +202,8 @@ module.exports = (data, option, fontBase64) => {
             </div>
             <p>ตำแหน่ง${staff_position}</p>
           </div>
+           </div>
+        </div>
       </section>
     </div>
   </body>

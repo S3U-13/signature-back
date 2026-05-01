@@ -1,7 +1,10 @@
 const { CalculateAge } = require("../utils/calculateAge");
+const { FormateDate } = require("../utils/formateDate");
 
 module.exports = (data, option, fontBase64) => {
   const form_type = data?.data_form?.form?.FormTypeName?.form_name ?? null;
+  const date_form = data?.data_form?.form?.date_form ?? null;
+  const do_date = data?.data_pat?.pat_vitalsign?.dodate ?? null;
   const hn = data?.data_pat?.pat?.hn ?? null;
   const pat_name = data.data_pat.pat
     ? `${data.data_pat.pat.prename}${data.data_pat.pat.firstname} ${data.data_pat.pat.lastname}`
@@ -180,7 +183,7 @@ module.exports = (data, option, fontBase64) => {
             <div class="text-md flex items-center">
              <div class="flex">
                 <p>วันที่ตรวจ </p>
-                <p class="w-35 relative inline-block px-2">-
+                <p class="w-35 relative inline-block px-2">${FormateDate(do_date)}
                  <span class="absolute left-0 right-0 bottom-1 border-b border-dotted"></span>
                 </p>
               </div>
@@ -218,7 +221,7 @@ module.exports = (data, option, fontBase64) => {
             </div>
             <div class="flex">
                 <p>ปริมาณ</p>
-                <p class="w-30 relative inline-block px-2">${contrast_media}
+                <p class="w-30 relative inline-block px-2">${volume_cc}
                  <span class="absolute left-0 right-0 bottom-1 border-b border-dotted"></span>
                 </p>
                 <p>CC</p>
@@ -260,26 +263,48 @@ module.exports = (data, option, fontBase64) => {
                 <p class="pl-8 w-65">3.ถ้าเคยตรวจท่านเเพ้สารทึบรังสีหรือไม่</p>
                 <div class=" flex item-center gap-2">
                   ${contrastAllergyHTML}
-                  <p>${contrast_allergy_symptom}</p>
+                  <div class="flex ${contrast_allergy_id === 3 ? "" : "hidden"}">
+                    <p>ระบุอาการ</p>
+                    <p class="relative inline-block px-2">${contrast_allergy_symptom}
+                     <span class="absolute left-0 right-0 bottom-1 border-b border-dotted"></span>
+                    </p>
+                  </div>
                 </div>
               </div>
               <div class="flex">
                 <p class="pl-8 w-65">4.ท่านมีประวัติเเพ้อาหารทะเลหรือไม่</p>
                 <div class=" flex item-center gap-2">
                   ${seafoodAllergyHTML}
-                  <p>${seafood_allergy_symptom}</p>
+                  <div class="flex ${seafood_allergy_id === 1 ? "" : "hidden"}">
+                    <p>ระบุอาการ</p>
+                    <p class="relative inline-block px-2">${seafood_allergy_symptom}
+                     <span class="absolute left-0 right-0 bottom-1 border-b border-dotted"></span>
+                    </p>
+                  </div>
                 </div>
               </div>
               <div class="flex">
                 <p class="pl-8 w-65">5.ท่านมีประวัติเเพ้ยาอื่นๆอีกหรือไม่</p>
-                <div class=" flex item-center gap-2">
+                <div class=" flex item-center gap-2 ">
                   ${drugAllergyHTML}
-                  <p>${drug}</p>
+                  <div class="flex ${drug_allergy_id === 6 ? "" : "hidden"}">
+                    <p>ระบุยา</p>
+                    <p class="relative inline-block px-2">${drug}
+                     <span class="absolute left-0 right-0 bottom-1 border-b border-dotted"></span>
+                    </p>
+                  </div>
                 </div>
               </div>
               <div>
               <p class="pl-8">6.ข้าพเจ้าขอรับรองว่าไม่ได้อยู่ในระหว่างตั้งครรภ์ ขณะได้รับการตรวจด้วยวิธีดังกล่าว</p>
-              <p class="pl-16">(โดยประจำเดือนมาครั้งสุดท้ายวันที่ ${lmp})</p>
+              <div class="pl-16 flex">
+                <p >(</p>
+                <p>โดยประจำเดือนมาครั้งสุดท้ายวันที่</p>
+                <p class="relative inline-block px-2">${FormateDate(lmp)}
+                  <span class="absolute left-0 right-0 bottom-1 border-b border-dotted"></span>
+                </p>
+                <p>)</p>
+              </div>
               </div>
           </div>
         </section>
@@ -428,7 +453,7 @@ module.exports = (data, option, fontBase64) => {
               </div>
               <div class="flex">
                 <p>วันที่</p>
-                <p class="w-40 relative inline-block">-
+                <p class="w-40 relative inline-block px-2">${FormateDate(date_form)}
                 <span class="absolute left-0 right-0 bottom-1 border-b border-dotted"></span>
                 </p>
               </div>

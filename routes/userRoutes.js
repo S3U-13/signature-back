@@ -9,6 +9,7 @@ const manageStaffController = require("../controllers/manageStaffController");
 const addSignatureController = require("../controllers/addSignatureController");
 const mailController = require("../controllers/mailController");
 const pdfController = require("../controllers/pdfController");
+const dashboardController = require("../controllers/dashboardController");
 
 // const apiLogger = require("../middleware/apiLogger");
 const {
@@ -103,5 +104,9 @@ router.get("/preview-generate-pdf/:form_id", pdfController.previewPdf);
 router.get("/get-pdf/:id", pdfController.getPdf);
 router.get("/list-pdf", pdfController.list);
 router.delete("/cancel-pdf/:id", pdfController.cancel);
+
+//dashboard
+router.get("/dashboard", dashboardController.dashboard);
+router.get("/latest-movement", dashboardController.latestMovement);
 
 module.exports = router;

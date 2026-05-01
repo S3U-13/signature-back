@@ -196,11 +196,14 @@ exports.crate_form = async (req, res) => {
       doctor_sign,
       doctor_sign_date,
       doctor_id,
-      staff_id,
-      nurse_id,
+      // staff_id,
+      // nurse_id,
       viewer,
       date_form,
+      isSign,
     } = cleanedBody;
+
+    console.log(isSign);
 
     const requiredFields = ["hn", "form_type_id"];
     for (const field of requiredFields) {
@@ -225,8 +228,8 @@ exports.crate_form = async (req, res) => {
         consent: null,
         doctor_id,
         doctor_userid: doctor_user.userid,
-        staff_id,
-        nurse_id,
+        // staff_id,
+        // nurse_id,
         viewer,
         creator: userId,
         date_form,
@@ -236,23 +239,23 @@ exports.crate_form = async (req, res) => {
 
     const actions = [];
 
-    if (staff_id) {
-      actions.push({
-        form_id: form.id,
-        role: "staff",
-        userid: staff_id,
-        status: "pending",
-      });
-    }
+    // if (staff_id) {
+    //   actions.push({
+    //     form_id: form.id,
+    //     role: "staff",
+    //     userid: staff_id,
+    //     status: "pending",
+    //   });
+    // }
 
-    if (nurse_id) {
-      actions.push({
-        form_id: form.id,
-        role: "nurse",
-        userid: nurse_id,
-        status: "pending",
-      });
-    }
+    // if (nurse_id) {
+    //   actions.push({
+    //     form_id: form.id,
+    //     role: "nurse",
+    //     userid: nurse_id,
+    //     status: "pending",
+    //   });
+    // }
 
     if (doctor_id) {
       actions.push({
@@ -284,7 +287,9 @@ exports.crate_form = async (req, res) => {
 
     await t.commit();
 
-    const targets = [staff_id, nurse_id, doctor_user?.userid].filter(Boolean);
+    const targets = [
+      // staff_id, nurse_id, 
+      doctor_user?.userid].filter(Boolean);
 
     targets.forEach((uid) => {
       global.io.to(`user_${uid}`).emit("new-notification", {

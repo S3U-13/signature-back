@@ -1,5 +1,7 @@
+const { FormateDate } = require("../utils/formateDate");
 module.exports = (data, option, fontBase64) => {
   const form_type = data?.data_form?.form?.FormTypeName?.form_name ?? null;
+  const date_form = data?.data_form?.form?.date_form ?? null;
   const pat_name = data.data_pat.pat
     ? `${data.data_pat.pat.prename}${data.data_pat.pat.firstname} ${data.data_pat.pat.lastname}`
     : null;
@@ -59,7 +61,12 @@ module.exports = (data, option, fontBase64) => {
   <body>
     <div class="space-y-6">
       <h1 class="text-xl font-semibold text-center">${form_type}โรงพยาบาลพระปกเกล้า</h1>
-      <p class="text-lg text-right">วันที่................................</p>
+       <div class="flex justify-end items-center">
+          <p class="text-lg text-right">วันที่</p>
+          <p class="relative inline-block px-2">${FormateDate(date_form)}
+          <span class="absolute left-0 right-0 bottom-1 border-b border-dotted"></span>
+          </p>
+        </div>
       <section class="text-lg space-y-2">
         <div class="flex">
           <div class="flex">
@@ -168,7 +175,7 @@ module.exports = (data, option, fontBase64) => {
                   </div>
               </div>
             </div>
-            <p class="indent-8">☐ ไม่มีพยาบาลฝ่ายผู้ป่วย(เนื่องจากผู้ป่วยมาคนเดียว)</p>
+            <p class="indent-8">☐ ไม่มีพยานฝ่ายผู้ป่วย(เนื่องจากผู้ป่วยมาคนเดียว)</p>
           </div>
           <div class="flex items-center gap-1">
             <p>พยานฝ่ายเจ้าหน้าที่</p>

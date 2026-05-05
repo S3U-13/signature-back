@@ -209,15 +209,8 @@ module.exports = {
         allowNull: true,
         type: Sequelize.STRING,
       },
-      staff_sign: {
-        allowNull: true,
-        type: Sequelize.BLOB,
-      },
       signature_id: { allowNull: true, type: Sequelize.INTEGER },
-      staff_sign_date: {
-        allowNull: true,
-        type: Sequelize.DATE,
-      },
+
       flag_status: {
         allowNull: true,
         defaultValue: "a",
@@ -248,15 +241,8 @@ module.exports = {
         allowNull: true,
         type: Sequelize.INTEGER,
       },
-      doctor_sign: {
-        allowNull: true,
-        type: Sequelize.BLOB,
-      },
       signature_id: { allowNull: true, type: Sequelize.INTEGER },
-      doctor_sign_date: {
-        allowNull: true,
-        type: Sequelize.DATE,
-      },
+
       flag_status: {
         allowNull: true,
         defaultValue: "a",

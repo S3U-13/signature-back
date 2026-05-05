@@ -45,6 +45,11 @@ module.exports = {
         type: Sequelize.DATE,
         allowNull: true,
       },
+      lock: {
+        type: Sequelize.STRING(1),
+        allowNull: true,
+        defaultValue: "n",
+      },
     });
   },
 
@@ -55,5 +60,6 @@ module.exports = {
      * Example:
      * await queryInterface.dropTable('users');
      */
+    await queryInterface.dropTable("form_actions");
   },
 };

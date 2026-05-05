@@ -41,6 +41,9 @@ exports.simulationConsentFormService = async (id, body, user) => {
       nurse_sign_date,
       doctor_sign_id,
       doctor_sign_date,
+      staff_id,
+      nurse_id,
+      viewer,
       //staff note
       cr,
       egfr,
@@ -64,6 +67,8 @@ exports.simulationConsentFormService = async (id, body, user) => {
         lmp,
         consent,
         date_form,
+        staff_id: parseInt(staff_id),
+        nurse_id: parseInt(nurse_id),
         form_status: "Saved",
       },
       { where: { id: id }, transaction: t },
@@ -81,6 +86,8 @@ exports.simulationConsentFormService = async (id, body, user) => {
       nurse_sign_existing,
       doctor_sign_existing,
       staff_note,
+      form_staff_actions,
+      form_nurse_actions,
     ] = await Promise.all([
       db.PatientContacts.findOne({ where: { form_id: id }, transaction: t }),
       db.ContrastAllergyStatus.findOne({
@@ -106,6 +113,14 @@ exports.simulationConsentFormService = async (id, body, user) => {
       db.NurseSign.findOne({ where: { form_id: id }, transaction: t }),
       db.DoctorSign.findOne({ where: { form_id: id }, transaction: t }),
       db.StaffNote.findOne({ where: { form_id: id }, transaction: t }),
+      db.FormAction.findOne({
+        where: { form_id: id, userid: staff_id },
+        transaction: t,
+      }),
+      db.FormAction.findOne({
+        where: { form_id: id, userid: nurse_id },
+        transaction: t,
+      }),
     ]);
 
     // let user_sign_existing = null;
@@ -373,6 +388,37 @@ exports.simulationConsentFormService = async (id, body, user) => {
         { transaction: t },
       );
     }
+
+    const actionsArray = [];
+
+    if (staff_id) {
+      actionsArray.push({
+        form_id: id,
+        role: "staff",
+        userid: staff_id,
+        status: "pending",
+        lock: "y",
+      });
+    }
+
+    if (nurse_id) {
+      actionsArray.push({
+        form_id: id,
+        role: "nurse",
+        userid: nurse_id,
+        status: "pending",
+        lock: "y",
+      });
+    }
+
+    if (
+      (!form_staff_actions && !form_nurse_actions) ||
+      !form_staff_actions ||
+      !form_nurse_actions
+    ) {
+      await db.FormAction.bulkCreate(actionsArray, { transaction: t });
+    }
+
     // -------------------------
     // FormAction update
     // -------------------------

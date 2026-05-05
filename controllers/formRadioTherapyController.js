@@ -24,19 +24,19 @@ exports.form_list = async (req, res) => {
     const { sortField = "createdAt", sortOrder = "desc" } = req.query;
 
     // 🔍 เงื่อนไข query form
-    const fields = ["creator", "viewer", "staff_id", "nurse_id"];
+    // const fields = ["creator", "viewer", "staff_id", "nurse_id"];
 
-    const orConditions = fields.map((f) => ({
-      [f]: req.user.userid,
-    }));
+    // const orConditions = fields.map((f) => ({
+    //   [f]: req.user.userid,
+    // }));
 
-    if (req.user.doctorid) {
-      orConditions.push({ doctor_id: req.user.doctorid });
-    }
+    // if (req.user.doctorid) {
+    //   orConditions.push({ doctor_id: req.user.doctorid });
+    // }
 
     const whereCondition = {
       ...(status && { form_status: status }),
-      [Op.or]: orConditions,
+      // [Op.or]: orConditions,
     };
 
     // 📄 ดึง Form
@@ -193,7 +193,7 @@ exports.crate_form = async (req, res) => {
       vitalsign_id,
       disease,
       lmp,
-      doctor_sign,
+      doctor_sign_id,
       doctor_sign_date,
       doctor_id,
       // staff_id,
@@ -202,8 +202,6 @@ exports.crate_form = async (req, res) => {
       date_form,
       isSign,
     } = cleanedBody;
-
-    console.log(isSign);
 
     const requiredFields = ["hn", "form_type_id"];
     for (const field of requiredFields) {
@@ -237,6 +235,18 @@ exports.crate_form = async (req, res) => {
       { transaction: t },
     );
 
+    if (isSign === true) {
+      await db.DoctorSign.create(
+        {
+          form_id: form.id,
+          doctor_id: doctor_id,
+          signature_id: doctor_sign_id,
+          doctor_sign_date,
+        },
+        { transaction: t },
+      );
+    }
+
     const actions = [];
 
     // if (staff_id) {
@@ -257,13 +267,24 @@ exports.crate_form = async (req, res) => {
     //   });
     // }
 
-    if (doctor_id) {
+    if (doctor_id && isSign === true) {
       actions.push({
         form_id: form.id,
         role: "doctor",
         userid: doctor_user.userid,
         doctorid: doctor_id,
-        status: "pending",
+        signed_at: new Date(),
+        status: "Signed",
+        lock: "y",
+      });
+    } else if (doctor_id) {
+      actions.push({
+        form_id: form.id,
+        role: "doctor",
+        userid: doctor_user.userid,
+        doctorid: doctor_id,
+        status: "Pending",
+        lock: "y",
       });
     }
 
@@ -288,8 +309,9 @@ exports.crate_form = async (req, res) => {
     await t.commit();
 
     const targets = [
-      // staff_id, nurse_id, 
-      doctor_user?.userid].filter(Boolean);
+      // staff_id, nurse_id,
+      doctor_user?.userid,
+    ].filter(Boolean);
 
     targets.forEach((uid) => {
       global.io.to(`user_${uid}`).emit("new-notification", {
@@ -330,6 +352,7 @@ exports.show_pat_form_by_form_id = async (req, res) => {
       doctor_sign,
       nurse_sign,
       staff_note,
+      form_actions,
     ] = await Promise.all([
       db.Form.findOne({
         where: { id: id },
@@ -352,6 +375,7 @@ exports.show_pat_form_by_form_id = async (req, res) => {
       db.DoctorSign.findOne({ where: { form_id: id } }),
       db.NurseSign.findOne({ where: { form_id: id } }),
       db.StaffNote.findOne({ where: { form_id: id } }),
+      db.FormAction.findAll({ where: { form_id: id } }),
     ]);
 
     const UserSignMapById = {
@@ -522,6 +546,7 @@ exports.show_pat_form_by_form_id = async (req, res) => {
       staff_sign_date: staff_sign?.staff_sign_date,
       staff_sign: StaffSign,
       signature_id: staff_sign?.signature_id,
+      lock: staff_sign?.lock,
     };
     //nurse_sign
     let NurseSign = null;
@@ -534,6 +559,7 @@ exports.show_pat_form_by_form_id = async (req, res) => {
       nurse_sign_date: nurse_sign?.nurse_sign_date,
       nurse_sign: NurseSign,
       signature_id: nurse_sign?.signature_id,
+      lock: nurse_sign?.lock,
     };
 
     //doctor sing
@@ -548,6 +574,7 @@ exports.show_pat_form_by_form_id = async (req, res) => {
       doctor_sign: docSign,
       doctor_name: doctor_user?.user_data?.person_name ?? null,
       signature_id: doctor_sign?.signature_id,
+      lock: doctor_sign?.lock ?? null,
     };
 
     const patient_contact = {
@@ -573,9 +600,9 @@ exports.show_pat_form_by_form_id = async (req, res) => {
         staffsign: staffsign ?? null,
         nursesign: nursesign ?? null,
         doctorsign: doctorsign ?? null,
-        doctor_user: doctor_user.user_data ?? null,
-        staff_user: staff_user.user_data ?? null,
-        nurse_user: nurse_user.user_data ?? null,
+        doctor_user: doctor_user?.user_data ?? null,
+        staff_user: staff_user?.user_data ?? null,
+        nurse_user: nurse_user?.user_data ?? null,
         staff_note: staff_note ?? null,
       },
       data_pat: {
@@ -583,6 +610,7 @@ exports.show_pat_form_by_form_id = async (req, res) => {
         pat_visit: pat_visit ?? {},
         pat_vitalsign: pat_vitalsign ?? {},
       },
+      form_actions: form_actions ?? [],
     };
 
     return res.status(200).json(result);

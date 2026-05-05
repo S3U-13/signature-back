@@ -24,9 +24,8 @@ module.exports = {
         allowNull: true,
         type: Sequelize.INTEGER,
       },
-      nurse_sign: { allowNull: true, type: Sequelize.BLOB },
       signature_id: { allowNull: true, type: Sequelize.INTEGER },
-      nurse_sign_date: { allowNull: true, type: Sequelize.DATE },
+
       flag_status: {
         defaultValue: "a",
         allowNull: true,

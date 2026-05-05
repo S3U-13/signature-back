@@ -12,15 +12,9 @@ const DoctorSign = sequelize.define(
       type: DataTypes.INTEGER,
       allowNull: true,
     },
+    
     signature_id: DataTypes.INTEGER,
-    doctor_sign: {
-      type: DataTypes.BLOB,
-      allowNull: true,
-    },
-    doctor_sign_date: {
-      type: DataTypes.DATE,
-      allowNull: true,
-    },
+
     flag_status: {
       type: DataTypes.STRING(1),
       allowNull: true,

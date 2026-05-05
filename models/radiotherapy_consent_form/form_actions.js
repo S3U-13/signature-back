@@ -11,6 +11,7 @@ const FormAction = sequelize.define(
     status: DataTypes.STRING(20),
     viewed_at: DataTypes.DATE,
     signed_at: DataTypes.DATE,
+    lock: DataTypes.STRING,
   },
   {
     modelName: "FormAction",
